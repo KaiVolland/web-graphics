@@ -1,4 +1,4 @@
-#version 300 es
+export default /* wgsl */`#version 300 es
 
 precision mediump float;
 
@@ -43,3 +43,4 @@ void main()
 
     fragColor = vec4(finalColor, 1.0);
 }
+`;

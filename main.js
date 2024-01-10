@@ -1,5 +1,5 @@
-import vertexShaderSource from './shader/main.vert?raw';
-import fragmentShaderSource from './shader/main.frag?raw';
+import vertexShaderSource from './shader/main.vert.js';
+import fragmentShaderSource from './shader/main.frag.js';
 
 let speedFactor = document.getElementById('speed-slider').value;
 let density = document.getElementById('density-slider').value;
