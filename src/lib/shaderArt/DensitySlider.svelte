@@ -4,6 +4,12 @@
 </script>
 
 <input
+  type="number"
+  min="1"
+  max="30"
+  bind:value={$density}
+>
+<input
   id={id}
   type="range"
   min="1"
