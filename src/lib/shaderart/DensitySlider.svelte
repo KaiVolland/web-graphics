@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { density } from "../../store/shaderArt/density.js";
+  import { density } from "../../store/shaderart/density.js";
   export let id = "density-slider";
 </script>
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { speedFactor } from "../../store/shaderArt/speedFactor.js";
+  import { speedFactor } from "../../store/shaderart/speedFactor.js";
   export let id = "speed-slider";
 </script>
 
