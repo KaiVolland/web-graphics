@@ -12,6 +12,17 @@ html, body {
   margin: 0 auto;
   text-align: center;
   height: 100%;
+
+  --primary: #F9EFDB;
+  --secondary: #EBD9B4;
+  --accent: #9DBC98;
+  --secondary-accent: #638788;
+
+  --text-color: #36494a;
+  --text-color-active: #151d1e;
+
+  font-family: Poppins;
+  color: var(--text-color);
 }
 
 @media (prefers-color-scheme: light) {

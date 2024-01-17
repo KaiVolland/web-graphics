@@ -1,8 +1,8 @@
 <script lang="ts">
-  import {link} from 'svelte-spa-router'
   import Router from 'svelte-spa-router';
   import Home from './routes/Home.svelte';
   import ShaderArt from './routes/shaderart/ShaderArt.svelte';
+  import Link from './lib/shaderArt/Link.svelte';
 
   const routes = {
     '/': Home,
@@ -14,8 +14,8 @@
 <div class="content">
   <header>
     <nav>
-      <a href="/home" use:link>Home</a>
-      <a href="/shaderart" use:link>Shader Art</a>
+      <Link href="/home">Home</Link>
+      <Link href="/shaderart">Shader Art</Link>
     </nav>
   </header>
   <main>
