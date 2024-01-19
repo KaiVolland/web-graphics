@@ -33,12 +33,13 @@ export class Uniform {
       this._program = program;
     }
     if (value) {
-      this.setValue(value);
+      this.value = value;
     }
   }
 
-  setValue(value: number | number[]) {
+  set value(value: number | number[]) {
     this._value = value;
+
     if (!Array.isArray(value)) {
       switch (this._type) {
         case '1f':
