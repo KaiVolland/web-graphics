@@ -9,12 +9,15 @@
 
 <style lang="less">
   a {
-    color: var(--text-color);
+    color: var(--text-color-light);
     text-decoration: none;
+
+    &:hover {
+      color: var(--text-color-dark);
+    }
 
     &.active {
       font-weight: bold;
-      color: var(--text-color-active);
     }
   }
 </style>

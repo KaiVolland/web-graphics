@@ -18,11 +18,11 @@ html, body {
   --accent: #9DBC98;
   --secondary-accent: #638788;
 
-  --text-color: #36494a;
-  --text-color-active: #151d1e;
+  --text-color-dark: #36494a;
+  --text-color-light: #638788;
 
   font-family: Poppins;
-  color: var(--text-color);
+  color: var(--text-color-dark);
 }
 
 @media (prefers-color-scheme: light) {

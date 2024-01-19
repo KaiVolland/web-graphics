@@ -25,7 +25,7 @@ void main()
 
     vec2 uv0 = uv;
     vec3 finalColor = vec3(0.0);
-    
+
     for (float i = 0.0; i < 4.0; i++) {
         uv = fract(uv * uDensity / 10.0) - 0.5;
 

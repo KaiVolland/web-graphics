@@ -1,6 +1,6 @@
 <script lang="ts">
-  import vertexShaderSource from "../../shader/main.vert.js";
-  import fragmentShaderSource from "../../shader/main.frag.js";
+  import vertexShaderSource from "../../shader/shaderArt/main.vert.js";
+  import fragmentShaderSource from "../../shader/shaderArt/main.frag.js";
   import { density } from "../../store/shaderArt/density.js";
   import { speedFactor } from "../../store/shaderArt/speedFactor.js";
   import { onMount } from "svelte";
@@ -28,7 +28,7 @@
     gl.shaderSource(vertexShader, vertexShaderSource);
     gl.compileShader(vertexShader);
     gl.attachShader(program!, vertexShader);
-    
+
     const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
     if (!fragmentShader) {
       return;
