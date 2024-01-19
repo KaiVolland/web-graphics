@@ -89,6 +89,9 @@
   <DensitySlider id="density-slider" />
 </div>
 <canvas bind:this={canvas} width="1024" height="1024"></canvas>
+<div>
+  <a href="https://www.youtube.com/watch?v=f4s1h2YETNY&t=583s">Shader code by kishimisu</a>
+</div>
 
 <style>
 </style>
