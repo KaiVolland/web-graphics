@@ -9,20 +9,8 @@ uniform vec2 u_resolution;
 
 uniform mat3 u_transformation;
 
-// all shaders have a main function
 void main() {
-  // apply the tranformation matrix
-  vec2 position = (u_transformation * vec3(a_position, 1)).xy;
-
-  // convert the position from pixels to 0.0 to 1.0
-  vec2 zeroToOne = position / u_resolution;
-
-  // convert from 0->1 to 0->2
-  vec2 zeroToTwo = zeroToOne * 2.0;
-
-  // convert from 0->2 to -1->+1 (clipspace)
-  vec2 clipSpace = zeroToTwo - 1.0;
-
-  gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
+  // Multiply the position by the matrix.
+  gl_Position = vec4((u_transformation * vec3(a_position, 1)).xy, 0, 1);
 }
 `;

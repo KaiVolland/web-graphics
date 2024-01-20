@@ -37,7 +37,11 @@ export class Uniform {
     }
   }
 
-  set value(value: number | number[]) {
+  get value() {
+    return this._value;
+  }
+
+  set value(value: number | number[] | null) {
     this._value = value;
 
     if (!Array.isArray(value)) {

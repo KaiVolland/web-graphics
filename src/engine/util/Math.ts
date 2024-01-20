@@ -18,6 +18,15 @@ export const m3 = {
     0, 0, 1,
   ],
 
+  projection: function (width: number, height: number) {
+    // Note: This matrix flips the Y axis so that 0 is at the top.
+    return [
+      2 / width, 0, 0,
+      0, -2 / height, 0,
+      -1, 1, 1,
+    ];
+  },
+
   multiply: function (a: number[], b: number[]) {
     var a00 = a[0 * 3 + 0];
     var a01 = a[0 * 3 + 1];
@@ -49,6 +58,18 @@ export const m3 = {
       b20 * a01 + b21 * a11 + b22 * a21,
       b20 * a02 + b21 * a12 + b22 * a22,
     ];
+  },
+
+  translate: function (m: number[], tx: number, ty: number) {
+    return m3.multiply(m, m3.translation(tx, ty));
+  },
+
+  rotate: function (m: number[], angleInRadians: number) {
+    return m3.multiply(m, m3.rotation(angleInRadians));
+  },
+
+  scale: function (m: number[], sx: number, sy: number) {
+    return m3.multiply(m, m3.scaling(sx, sy));
   },
 
   translation: function (tx: number, ty: number) {
