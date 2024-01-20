@@ -7,13 +7,12 @@ in vec2 a_position;
 // Used to pass in the resolution of the canvas
 uniform vec2 u_resolution;
 
-// translation to add to position
-uniform vec2 u_translation;
+uniform mat3 u_transformation;
 
 // all shaders have a main function
 void main() {
-  // Add in the translation
-  vec2 position = a_position + u_translation;
+  // apply the tranformation matrix
+  vec2 position = (u_transformation * vec3(a_position, 1)).xy;
 
   // convert the position from pixels to 0.0 to 1.0
   vec2 zeroToOne = position / u_resolution;

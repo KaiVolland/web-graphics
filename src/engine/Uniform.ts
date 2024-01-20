@@ -3,7 +3,7 @@ import type { Program } from "./Program";
 type Dimensions = '1' | '2' | '3' | '4';
 type Datatype = 'f' | 'i';
 type Sequence = 'v' | '';
-type WebGLType = `${Dimensions}${Datatype}${Sequence}`
+type WebGLType = `${Dimensions}${Datatype}${Sequence}` | 'matrix2fv' | 'matrix3fv' | 'matrix4fv';
 
 export type UniformParams = {
   gl: WebGL2RenderingContext;
@@ -62,6 +62,15 @@ export class Uniform {
         case '4f':
         case '4i':
           this._gl.uniform4f(this.getLocation(), value[0], value[1], value[2], value[3]);
+          break;
+        case 'matrix2fv':
+          this._gl.uniformMatrix2fv(this.getLocation(), false, value);
+          break;
+        case 'matrix3fv':
+          this._gl.uniformMatrix3fv(this.getLocation(), false, value);
+          break;
+        case 'matrix4fv':
+          this._gl.uniformMatrix4fv(this.getLocation(), false, value);
           break;
         case '2fv':
           this._gl.uniform2fv(this.getLocation(), value);
