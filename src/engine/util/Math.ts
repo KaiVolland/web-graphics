@@ -107,6 +107,19 @@ export const m4 = {
     0, 0, 0, 1,
   ],
 
+  orthographic: function (left: number, right: number, bottom: number, top: number, near: number, far: number) {
+    return [
+      2 / (right - left), 0, 0, 0,
+      0, 2 / (top - bottom), 0, 0,
+      0, 0, 2 / (near - far), 0,
+
+      (left + right) / (left - right),
+      (bottom + top) / (bottom - top),
+      (near + far) / (near - far),
+      1,
+    ];
+  },
+
   projection: function (width: number, height: number, depth: number) {
     // Note: This matrix flips the Y axis so 0 is at the top.
     return [

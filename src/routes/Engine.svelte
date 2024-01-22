@@ -100,12 +100,13 @@
     const [colorR, colorG, colorB] = hexToRGB(color, true);
     colorUniform.value = [colorR, colorG, colorB, 1];
 
-    // var matrix = m3.projection(canvasWidth, canvasHeight);
-    // matrix = m3.translate(matrix, translationX, translationY);
-    // matrix = m3.rotate(matrix, degreesToRadians(360 - rotation));
-    // matrix = m3.scale(matrix, scaleX, scaleY);
-
-    var matrix = m4.projection(canvasWidth, canvasHeight, 512);
+    const left = 0;
+    const right = canvasWidth;
+    const bottom = canvasHeight;
+    const top = 0;
+    const near = 512;
+    const far = -512;
+    let matrix = m4.orthographic(left, right, bottom, top, near, far);
     matrix = m4.translate(matrix, translationX, translationY, translationZ);
     matrix = m4.xRotate(matrix, degreesToRadians(360 - rotationX));
     matrix = m4.yRotate(matrix, degreesToRadians(360 - rotationY));
@@ -149,11 +150,11 @@
   <div class="control">
     <span class="label">Rotation:</span>
     <span class="label">x</span>
-    <input type="number" bind:value={rotationX} />
+    <input type="number" bind:value={rotationX} step={15} />
     <span class="label">y</span>
-    <input type="number" bind:value={rotationY} />
+    <input type="number" bind:value={rotationY} step={15} />
     <span class="label">z</span>
-    <input type="number" bind:value={rotationZ} />
+    <input type="number" bind:value={rotationZ} step={15} />
   </div>
   <div class="control">
     <span class="label">Color:</span>
