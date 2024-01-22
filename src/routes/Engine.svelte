@@ -8,7 +8,7 @@
   import { Program } from '../engine/Program';
   import { Attribute } from '../engine/Attribute';
   import { Uniform } from '../engine/Uniform';
-  import { F } from '../engine/shapes/3d/Chars';
+  import { F, FColor } from '../engine/shapes/3d/Chars';
   import { degreesToRadians, m4 } from '../engine/util/Math';
   import { hexToRGB } from '../engine/util/Color';
 
@@ -26,10 +26,9 @@
   let gl: WebGL2RenderingContext;
   let colorUniform: Uniform;
 
-  let shape: Float32Array = F;
-
   let transformationUniform: Uniform;
   let positionAttribute: Attribute;
+  let colorAttribute: Attribute;
 
   onMount(() => {
     const engine = new Engine(canvas);
@@ -59,8 +58,26 @@
       gl,
       name: 'a_position',
       program,
+      createVao: true,
+      pointerProperties: {
+        size: 3,
+        type: gl.FLOAT
+      }
     });
-    positionAttribute.setBufferData(shape);
+    positionAttribute.setBufferData(F);
+
+    // TODO: Move to Mesh class? mesh.draw();
+    colorAttribute = new Attribute({
+      gl,
+      name: 'a_color',
+      program,
+      pointerProperties: {
+        size: 3,
+        normalize: true,
+        type: gl.UNSIGNED_BYTE
+      }
+    });
+    colorAttribute.setBufferData(FColor);
 
     // Bind the attribute/buffer set we want.
     gl.bindVertexArray(positionAttribute.vao);
@@ -97,6 +114,9 @@
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+    gl.enable(gl.CULL_FACE);
+    gl.enable(gl.DEPTH_TEST);
+
     const [colorR, colorG, colorB] = hexToRGB(color, true);
     colorUniform.value = [colorR, colorG, colorB, 1];
 
@@ -117,10 +137,12 @@
 
     // TODO: Move to Mesh class? mesh.draw();
     // Draw the geometry.
-    positionAttribute.setBufferData(shape);
+    positionAttribute.setBufferData(F);
+    colorAttribute.setBufferData(FColor);
+
     const primitiveType = gl.TRIANGLES;
     const offset = 0;
-    const count = shape.length / 3;
+    const count = F.length / 3;
     gl.drawArrays(primitiveType, offset, count);
 
     requestAnimationFrame(draw);
@@ -150,29 +172,12 @@
   <div class="control">
     <span class="label">Rotation:</span>
     <span class="label">x</span>
-    <input type="number" bind:value={rotationX} step={15} />
+    <input type="number" bind:value={rotationX} step={15} min={-360} max={360} />
     <span class="label">y</span>
-    <input type="number" bind:value={rotationY} step={15} />
+    <input type="number" bind:value={rotationY} step={15} min={-360} max={360} />
     <span class="label">z</span>
-    <input type="number" bind:value={rotationZ} step={15} />
+    <input type="number" bind:value={rotationZ} step={15} min={-360} max={360} />
   </div>
-  <div class="control">
-    <span class="label">Color:</span>
-    <input type="color" bind:value={color} />
-  </div>
-  <!-- <div class="control">
-    <button
-      on:click={() => {
-        shape = shape === Cube ? F : Cube;
-      }}
-    >
-      {#if shape === Cube}
-        Show letter "F"
-      {:else}
-        Show cube
-      {/if}
-    </button>
-  </div> -->
 </div>
 
 <style lang="less">
