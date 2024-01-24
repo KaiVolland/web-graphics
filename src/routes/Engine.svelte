@@ -30,11 +30,62 @@
   let positionAttribute: Attribute;
   let colorAttribute: Attribute;
 
+  let mouseRotateActive = false;
+  let mouseRotateStartPosition = [0, 0];
+  let mouseRotateButton = 0;
+  let mouseRotateStartRotate = [0, 0, 0];
+  let mouseRotateStartTranslate = [0, 0, 0];
+  let mouseRotateStartScale = [0, 0, 0];
+
+  const onMouseDown = (event: MouseEvent) => {
+    mouseRotateActive = true;
+    mouseRotateButton = event.button;
+    mouseRotateStartPosition = [event.clientX, event.clientY];
+    mouseRotateStartRotate = [rotationX, rotationY, rotationZ];
+    mouseRotateStartTranslate = [translationX, translationY, translationZ];
+    mouseRotateStartScale = [scaleX, scaleY, scaleZ];
+  };
+
+  const onMouseUp = () => {
+    mouseRotateActive = false;
+    mouseRotateButton = 0;
+  };
+
+  const onMouseMove = (event: MouseEvent) => {
+    if (!mouseRotateActive) return;
+
+    const deltaX = mouseRotateStartPosition[0] - event.clientX;
+    const deltaY = mouseRotateStartPosition[1] - event.clientY;
+
+    // left mouse button
+    if (mouseRotateButton === 0) {
+      translationX = mouseRotateStartTranslate[0] - deltaX;
+      translationY = mouseRotateStartTranslate[1] - deltaY;
+    }
+    // mousewheel
+    if (mouseRotateButton === 1) {
+      rotationX = mouseRotateStartRotate[0] - deltaY;
+      rotationY = mouseRotateStartRotate[1] - deltaX;
+    }
+    // right mouse button
+    if (mouseRotateButton === 2) {
+      const factor = canvas.clientHeight/4;
+      scaleX = mouseRotateStartScale[0] + deltaY/factor;
+      scaleY = mouseRotateStartScale[1] + deltaY/factor;
+      scaleZ = mouseRotateStartScale[2] + deltaY/factor;
+    }
+  };
+
   onMount(() => {
     const engine = new Engine(canvas);
     if (!engine.gl) {
       throw 'Could not get gl from Engine.';
     }
+
+    canvas.addEventListener('contextmenu', event => event.preventDefault());
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mousemove', onMouseMove);
 
     gl = engine.gl;
     const program = new Program(gl);
