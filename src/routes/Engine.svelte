@@ -64,7 +64,8 @@
     }
     // mousewheel
     if (mouseRotateButton === 1) {
-      rotationX = mouseRotateStartRotate[0] - deltaY;
+      // FIXME: The axis seem to be swichted here check rotation matrices
+      rotationX = mouseRotateStartRotate[0] + deltaY;
       rotationY = mouseRotateStartRotate[1] - deltaX;
     }
     // right mouse button
