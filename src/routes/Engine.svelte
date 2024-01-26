@@ -11,39 +11,25 @@
   import { F, FColor } from '../engine/shapes/3d/Chars';
   import { degreesToRadians, m4 } from '../engine/util/Math';
   import { hexToRGB } from '../engine/util/Color';
+    import { Mesh } from '../engine/mesh/Mesh';
 
   let canvas: HTMLCanvasElement;
   let color: string = '#0E86E1';
-  let translationX: number = 256;
-  let translationY: number = 256;
-  let translationZ: number = 0;
-  let rotationX: number = 0;
-  let rotationY: number = 0;
-  let rotationZ: number = 0;
-  let scaleX: number = 1;
-  let scaleY: number = 1;
-  let scaleZ: number = 1;
   let gl: WebGL2RenderingContext;
   let colorUniform: Uniform;
 
-  let transformationUniform: Uniform;
-  let positionAttribute: Attribute;
   let colorAttribute: Attribute;
+
+  let fMesh: Mesh | undefined;
 
   let mouseRotateActive = false;
   let mouseRotateStartPosition = [0, 0];
   let mouseRotateButton = 0;
-  let mouseRotateStartRotate = [0, 0, 0];
-  let mouseRotateStartTranslate = [0, 0, 0];
-  let mouseRotateStartScale = [0, 0, 0];
 
   const onMouseDown = (event: MouseEvent) => {
     mouseRotateActive = true;
     mouseRotateButton = event.button;
     mouseRotateStartPosition = [event.clientX, event.clientY];
-    mouseRotateStartRotate = [rotationX, rotationY, rotationZ];
-    mouseRotateStartTranslate = [translationX, translationY, translationZ];
-    mouseRotateStartScale = [scaleX, scaleY, scaleZ];
   };
 
   const onMouseUp = () => {
@@ -58,22 +44,18 @@
     const deltaY = mouseRotateStartPosition[1] - event.clientY;
 
     // left mouse button
-    if (mouseRotateButton === 0) {
-      translationX = mouseRotateStartTranslate[0] - deltaX;
-      translationY = mouseRotateStartTranslate[1] - deltaY;
+    if (mouseRotateButton === 0 && fMesh) {
+      fMesh.translation = [deltaX, deltaY, 0];
     }
     // mousewheel
-    if (mouseRotateButton === 1) {
+    if (mouseRotateButton === 1 && fMesh) {
       // FIXME: The axis seem to be swichted here check rotation matrices
-      rotationX = mouseRotateStartRotate[0] + deltaY;
-      rotationY = mouseRotateStartRotate[1] - deltaX;
+      fMesh.rotation = [deltaX, deltaY, 0];
     }
     // right mouse button
-    if (mouseRotateButton === 2) {
+    if (mouseRotateButton === 2 && fMesh) {
       const factor = canvas.clientHeight/4;
-      scaleX = mouseRotateStartScale[0] + deltaY/factor;
-      scaleY = mouseRotateStartScale[1] + deltaY/factor;
-      scaleZ = mouseRotateStartScale[2] + deltaY/factor;
+      fMesh.scale = [deltaY, deltaY, deltaY];
     }
   };
 
@@ -106,19 +88,6 @@
     gl.useProgram(program.webGLProgram);
 
     // TODO: Move to Mesh class? mesh.draw();
-    positionAttribute = new Attribute({
-      gl,
-      name: 'a_position',
-      program,
-      createVao: true,
-      pointerProperties: {
-        size: 3,
-        type: gl.FLOAT
-      }
-    });
-    positionAttribute.setBufferData(F);
-
-    // TODO: Move to Mesh class? mesh.draw();
     colorAttribute = new Attribute({
       gl,
       name: 'a_color',
@@ -131,8 +100,12 @@
     });
     colorAttribute.setBufferData(FColor);
 
-    // Bind the attribute/buffer set we want.
-    gl.bindVertexArray(positionAttribute.vao);
+    fMesh = new Mesh({
+      gl,
+      program,
+      name: 'a_position',
+      translation: [256, 256 ,0]
+    });
 
     const [colorR, colorG, colorB] = hexToRGB(color, true);
 
@@ -142,14 +115,6 @@
       name: 'u_color',
       program,
       value: [colorR, colorG, colorB, 1],
-    });
-
-    transformationUniform = new Uniform({
-      gl,
-      type: 'matrix4fv',
-      name: 'u_transformation',
-      program,
-      value: m4.identity,
     });
 
     draw();
@@ -179,58 +144,51 @@
     const near = 512;
     const far = -512;
     let matrix = m4.orthographic(left, right, bottom, top, near, far);
-    matrix = m4.translate(matrix, translationX, translationY, translationZ);
-    matrix = m4.xRotate(matrix, degreesToRadians(360 - rotationX));
-    matrix = m4.yRotate(matrix, degreesToRadians(360 - rotationY));
-    matrix = m4.zRotate(matrix, degreesToRadians(360 - rotationZ));
-    matrix = m4.scale(matrix, scaleX, scaleY, scaleZ);
 
-    transformationUniform.value = matrix;
-
-    // TODO: Move to Mesh class? mesh.draw();
     // Draw the geometry.
-    positionAttribute.setBufferData(F);
-    colorAttribute.setBufferData(FColor);
+    if (fMesh) {
+      fMesh.data = F;
+      fMesh.draw();
+    }
 
-    const primitiveType = gl.TRIANGLES;
-    const offset = 0;
-    const count = F.length / 3;
-    gl.drawArrays(primitiveType, offset, count);
+    colorAttribute.setBufferData(FColor);
 
     requestAnimationFrame(draw);
   }
 </script>
 
 <canvas bind:this={canvas} width="512" height="512"></canvas>
-<div class="controls">
-  <div class="control">
-    <span class=".label">Positon:</span>
-    <span class="label">x</span>
-    <input type="number" bind:value={translationX} min={0} max={512 - 100} />
-    <span class="label">y</span>
-    <input type="number" bind:value={translationY} min={0} max={512 - 150} />
-    <span class="label">z</span>
-    <input type="number" bind:value={translationZ} min={0} max={512 - 150} />
+{#if fMesh}
+  <div class="controls">
+    <div class="control">
+      <span class=".label">Positon:</span>
+      <span class="label">x</span>
+      <input type="number" bind:value={fMesh.translation[0]} min={0} max={512 - 100} />
+      <span class="label">y</span>
+      <input type="number" bind:value={fMesh.translation[1]} min={0} max={512 - 150} />
+      <span class="label">z</span>
+      <input type="number" bind:value={fMesh.translation[2]} min={0} max={512 - 150} />
+    </div>
+    <div class="control">
+      <span class="label">Scale:</span>
+      <span class="label">x</span>
+      <input type="number" bind:value={fMesh.scale[0]} min={0.1} max={3} step={0.1} />
+      <span class="label">y</span>
+      <input type="number" bind:value={fMesh.scale[1]} min={0.1} max={3} step={0.1} />
+      <span class="label">z</span>
+      <input type="number" bind:value={fMesh.scale[2]} min={0.1} max={3} step={0.1} />
+    </div>
+    <div class="control">
+      <span class="label">Rotation:</span>
+      <span class="label">x</span>
+      <input type="number" bind:value={fMesh.rotation[0]} step={15} min={-360} max={360} />
+      <span class="label">y</span>
+      <input type="number" bind:value={fMesh.rotation[1]} step={15} min={-360} max={360} />
+      <span class="label">z</span>
+      <input type="number" bind:value={fMesh.rotation[2]} step={15} min={-360} max={360} />
+    </div>
   </div>
-  <div class="control">
-    <span class="label">Scale:</span>
-    <span class="label">x</span>
-    <input type="number" bind:value={scaleX} min={0.1} max={3} step={0.1} />
-    <span class="label">y</span>
-    <input type="number" bind:value={scaleY} min={0.1} max={3} step={0.1} />
-    <span class="label">z</span>
-    <input type="number" bind:value={scaleZ} min={0.1} max={3} step={0.1} />
-  </div>
-  <div class="control">
-    <span class="label">Rotation:</span>
-    <span class="label">x</span>
-    <input type="number" bind:value={rotationX} step={15} min={-360} max={360} />
-    <span class="label">y</span>
-    <input type="number" bind:value={rotationY} step={15} min={-360} max={360} />
-    <span class="label">z</span>
-    <input type="number" bind:value={rotationZ} step={15} min={-360} max={360} />
-  </div>
-</div>
+{/if}
 
 <style lang="less">
   canvas {
