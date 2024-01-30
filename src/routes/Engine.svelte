@@ -14,12 +14,12 @@
 
   let canvas: HTMLCanvasElement;
   let color: string = '#0E86E1';
-  let translationX: number = 256;
-  let translationY: number = 256;
-  let translationZ: number = 0;
-  let rotationX: number = 0;
-  let rotationY: number = 0;
-  let rotationZ: number = 0;
+  let translationX: number = -150;
+  let translationY: number = 0;
+  let translationZ: number = -360;
+  let rotationX: number = 190;
+  let rotationY: number = 40;
+  let rotationZ: number = 30;
   let scaleX: number = 1;
   let scaleY: number = 1;
   let scaleZ: number = 1;
@@ -70,10 +70,10 @@
     }
     // right mouse button
     if (mouseRotateButton === 2) {
-      const factor = canvas.clientHeight/4;
-      scaleX = mouseRotateStartScale[0] + deltaY/factor;
-      scaleY = mouseRotateStartScale[1] + deltaY/factor;
-      scaleZ = mouseRotateStartScale[2] + deltaY/factor;
+      const factor = canvas.clientHeight / 4;
+      scaleX = mouseRotateStartScale[0] + deltaY / factor;
+      scaleY = mouseRotateStartScale[1] + deltaY / factor;
+      scaleZ = mouseRotateStartScale[2] + deltaY / factor;
     }
   };
 
@@ -83,7 +83,7 @@
       throw 'Could not get gl from Engine.';
     }
 
-    canvas.addEventListener('contextmenu', event => event.preventDefault());
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
     canvas.addEventListener('mousedown', onMouseDown);
     canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('mousemove', onMouseMove);
@@ -113,9 +113,24 @@
       createVao: true,
       pointerProperties: {
         size: 3,
-        type: gl.FLOAT
-      }
+        type: gl.FLOAT,
+      },
     });
+
+    // flip F geometry
+    var fMatrix = m4.xRotation(Math.PI);
+    fMatrix = m4.translate(fMatrix, -50, -75, -15);
+    for (var ii = 0; ii < F.length; ii += 3) {
+      var vector = m4.transformVector(fMatrix, [
+        F[ii + 0],
+        F[ii + 1],
+        F[ii + 2],
+        1,
+      ]);
+      F[ii + 0] = vector[0];
+      F[ii + 1] = vector[1];
+      F[ii + 2] = vector[2];
+    }
     positionAttribute.setBufferData(F);
 
     // TODO: Move to Mesh class? mesh.draw();
@@ -126,8 +141,8 @@
       pointerProperties: {
         size: 3,
         normalize: true,
-        type: gl.UNSIGNED_BYTE
-      }
+        type: gl.UNSIGNED_BYTE,
+      },
     });
     colorAttribute.setBufferData(FColor);
 
@@ -155,7 +170,7 @@
     draw();
   });
 
-  function draw() {
+  function draw(time?: number) {
     if (!gl) return;
     let canvasWidth =
       canvas instanceof OffscreenCanvas ? canvas.width : canvas.clientWidth;
@@ -172,30 +187,81 @@
     const [colorR, colorG, colorB] = hexToRGB(color, true);
     colorUniform.value = [colorR, colorG, colorB, 1];
 
-    const left = 0;
-    const right = canvasWidth;
-    const bottom = canvasHeight;
-    const top = 0;
-    const near = 512;
-    const far = -512;
-    let matrix = m4.orthographic(left, right, bottom, top, near, far);
-    matrix = m4.translate(matrix, translationX, translationY, translationZ);
-    matrix = m4.xRotate(matrix, degreesToRadians(360 - rotationX));
-    matrix = m4.yRotate(matrix, degreesToRadians(360 - rotationY));
-    matrix = m4.zRotate(matrix, degreesToRadians(360 - rotationZ));
-    matrix = m4.scale(matrix, scaleX, scaleY, scaleZ);
+    const aspect = canvasWidth / canvasHeight;
+    const zNear = 1;
+    const zFar = 2000;
+    const fieldOfViewRadians = degreesToRadians(60);
+    // let matrix = m4.perspective(
+    //   degreesToRadians(fieldOfViewRadians),
+    //   aspect,
+    //   zNear,
+    //   zFar,
+    // );
+    // matrix = m4.translate(matrix, translationX, translationY, translationZ);
+    // matrix = m4.xRotate(matrix, degreesToRadians(360 - rotationX));
+    // matrix = m4.yRotate(matrix, degreesToRadians(360 - rotationY));
+    // matrix = m4.zRotate(matrix, degreesToRadians(360 - rotationZ));
+    // matrix = m4.scale(matrix, scaleX, scaleY, scaleZ);
 
-    transformationUniform.value = matrix;
+    // transformationUniform.value = matrix;
+
+    const numFs = 5;
+    const radius = 200;
+    // Compute the matrix
+    const projectionMatrix = m4.perspective(
+      fieldOfViewRadians,
+      aspect,
+      zNear,
+      zFar,
+    );
+
+    const rotation = time ? time / 10 : 0;
+    const fPosition = [radius, 0, 0];
+
+    let cameraMatrix = m4.yRotation(degreesToRadians(rotation));
+    cameraMatrix = m4.translate(cameraMatrix, 0, 0, radius * 1.5);
+
+    // Get the camera's position from the matrix we computed
+    const cameraPosition = [cameraMatrix[12], cameraMatrix[13], cameraMatrix[14]];
+    const up = [0, 1, 0];
+
+    // Compute the camera's matrix using look at.
+    cameraMatrix = m4.lookAt(cameraPosition, fPosition, up);
+
+    // Make a view matrix from the camera matrix.
+    const viewMatrix = m4.inverse(cameraMatrix);
+
+    // move the projection space to view space (the space in front of
+    // the camera)
+    const viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
+    // Draw 'F's in a circle
+    for (let ii = 0; ii < numFs; ++ii) {
+      const angle = (ii * Math.PI * 2) / numFs;
+
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      // add in the translation for this F
+      const matrix = m4.translate(viewProjectionMatrix, x, 0, z);
+
+      // Set the matrix.
+      transformationUniform.value = matrix;
+
+      // Draw the geometry.
+      const primitiveType = gl.TRIANGLES;
+      const offset = 0;
+      const count = 16 * 6;
+      gl.drawArrays(primitiveType, offset, count);
+    }
 
     // TODO: Move to Mesh class? mesh.draw();
     // Draw the geometry.
     positionAttribute.setBufferData(F);
     colorAttribute.setBufferData(FColor);
 
-    const primitiveType = gl.TRIANGLES;
-    const offset = 0;
-    const count = F.length / 3;
-    gl.drawArrays(primitiveType, offset, count);
+    // const primitiveType = gl.TRIANGLES;
+    // const offset = 0;
+    // const count = F.length / 3;
+    // gl.drawArrays(primitiveType, offset, count);
 
     requestAnimationFrame(draw);
   }
@@ -206,11 +272,11 @@
   <div class="control">
     <span class=".label">Positon:</span>
     <span class="label">x</span>
-    <input type="number" bind:value={translationX} min={0} max={512 - 100} />
+    <input type="number" bind:value={translationX} />
     <span class="label">y</span>
-    <input type="number" bind:value={translationY} min={0} max={512 - 150} />
+    <input type="number" bind:value={translationY} />
     <span class="label">z</span>
-    <input type="number" bind:value={translationZ} min={0} max={512 - 150} />
+    <input type="number" bind:value={translationZ} />
   </div>
   <div class="control">
     <span class="label">Scale:</span>
@@ -224,17 +290,35 @@
   <div class="control">
     <span class="label">Rotation:</span>
     <span class="label">x</span>
-    <input type="number" bind:value={rotationX} step={15} min={-360} max={360} />
+    <input
+      type="number"
+      bind:value={rotationX}
+      step={15}
+      min={-360}
+      max={360}
+    />
     <span class="label">y</span>
-    <input type="number" bind:value={rotationY} step={15} min={-360} max={360} />
+    <input
+      type="number"
+      bind:value={rotationY}
+      step={15}
+      min={-360}
+      max={360}
+    />
     <span class="label">z</span>
-    <input type="number" bind:value={rotationZ} step={15} min={-360} max={360} />
+    <input
+      type="number"
+      bind:value={rotationZ}
+      step={15}
+      min={-360}
+      max={360}
+    />
   </div>
 </div>
 
 <style lang="less">
   canvas {
-    border: 1px solid var(--accent);
+    border: 1px solid const(--accent);
     background-color: #f7f5ed;
   }
 

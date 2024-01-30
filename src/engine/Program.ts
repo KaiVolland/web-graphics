@@ -1,4 +1,3 @@
-import type { Attribute } from "./Attribute";
 import type { BaseShader } from "./shader/BaseShader";
 import { FragmentShader } from "./shader/FragmentShader";
 import { VertexShader } from "./shader/VertexShader";
