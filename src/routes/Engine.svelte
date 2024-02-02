@@ -1,6 +1,6 @@
 <script lang="ts">
-  import vertexShaderSource from '../shader/engine/3dtest/vert';
-  import fragmentShaderSource from '../shader/engine/3dtest/frag';
+  import vertexShaderSource from '../engine/shader/vert';
+  import fragmentShaderSource from '../engine/shader/frag';
   import { onMount } from 'svelte';
   import { Engine } from '../engine/Engine';
   import { VertexShader } from '../engine/shader/VertexShader';

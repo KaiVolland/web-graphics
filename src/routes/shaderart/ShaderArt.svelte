@@ -1,6 +1,6 @@
 <script lang="ts">
-  import vertexShaderSource from "../../shader/shaderArt/main.vert.js";
-  import fragmentShaderSource from "../../shader/shaderArt/main.frag.js";
+  import vertexShaderSource from "../../shaderArt/main.vert.js";
+  import fragmentShaderSource from "../../shaderArt/main.frag.js";
   import { density } from "../../store/shaderArt/density.js";
   import { speedFactor } from "../../store/shaderArt/speedFactor.js";
   import { onMount } from "svelte";
