@@ -83,9 +83,9 @@
     }
 
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
-    canvas.addEventListener('pointerdown', onMouseDown);
-    canvas.addEventListener('pointerup', onMouseUp);
-    canvas.addEventListener('pointermove', onMouseMove);
+    canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('mousemove', onMouseMove);
 
     gl = engine.gl;
     program = new Program(gl);
@@ -199,10 +199,19 @@
 
   function draw(time?: number) {
     if (!gl) return;
-    let canvasWidth =
-      canvas instanceof OffscreenCanvas ? canvas.width : canvas.clientWidth;
-    let canvasHeight =
-      canvas instanceof OffscreenCanvas ? canvas.height : canvas.clientHeight;
+
+    // Check if the canvas is not the same size.
+    const needResize =
+      canvas.width !== canvas.clientWidth ||
+      canvas.height !== canvas.clientHeight;
+    if (needResize) {
+      // Make the canvas the same size
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    }
+    let canvasWidth = canvas.width;
+    let canvasHeight = canvas.height;
 
     // Clear the canvas
     gl.clearColor(0, 0, 0, 0);
@@ -276,11 +285,8 @@
 </script>
 
 <div class="engine">
-  <canvas
-    bind:this={canvas}
-    width={window.innerWidth}
-    height={window.innerHeight}
-  ></canvas>
+  <!-- Size will get set in the draw call -->
+  <canvas bind:this={canvas} />
   <div class="controls">
     <div class="control">
       <span class="field">
@@ -362,8 +368,8 @@
   }
 
   canvas {
-    width: 100%;
-    height: 100%;
+    width: 100dvw;
+    height: 100dvh;
     border: 1px solid const(--accent);
     background-color: #f7f5ed;
   }
