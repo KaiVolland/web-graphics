@@ -36,15 +36,21 @@
 
   let mouseRotateActive = false;
   let mouseRotateStartPosition = [0, 0];
-  let mouseRotateButton = 0;
+  let mouseAction = 'rotate';
   let mouseRotateStartRotate = [0, 0, 0];
   let mouseRotateStartTranslate = [0, 0, 0];
   let mouseRotateStartScale = [0, 0, 0];
 
-  const onMouseDown = (event: MouseEvent) => {
+  const onMouseDown = (event: MouseEvent | TouchEvent) => {
+    const isTouch = event instanceof TouchEvent;
     mouseRotateActive = true;
-    mouseRotateButton = event.button;
-    mouseRotateStartPosition = [event.clientX, event.clientY];
+    if (!isTouch) {
+      mouseAction = event.button === 0 ? 'rotate' : 'scale';
+      mouseRotateStartPosition = [event.clientX, event.clientY];
+    } else {
+      mouseAction = 'rotate';
+      mouseRotateStartPosition = [event.touches[0].clientX, event.touches[0].clientY];
+    }
     mouseRotateStartRotate = [rotationX, rotationY, rotationZ];
     mouseRotateStartTranslate = [translationX, translationY, translationZ];
     mouseRotateStartScale = [scaleX, scaleY, scaleZ];
@@ -52,23 +58,27 @@
 
   const onMouseUp = () => {
     mouseRotateActive = false;
-    mouseRotateButton = 0;
+    mouseAction = 'rotate';
   };
 
-  const onMouseMove = (event: MouseEvent) => {
-    if (!mouseRotateActive) return;
+  const onMouseMove = (event: MouseEvent | TouchEvent) => {
+    const isTouch = event instanceof TouchEvent;
 
-    const deltaX = mouseRotateStartPosition[0] - event.clientX;
-    const deltaY = mouseRotateStartPosition[1] - event.clientY;
+    if (!mouseRotateActive) return;
+    const eventX = isTouch ? event.touches[0].clientX : event.clientX
+    const eventY = isTouch ? event.touches[0].clientY : event.clientY;
+
+    const deltaX = mouseRotateStartPosition[0] - eventX;
+    const deltaY = mouseRotateStartPosition[1] - eventY;
 
     // mousewheel
-    if (mouseRotateButton === 0) {
+    if (mouseAction === 'rotate') {
       // FIXME: The axis seem to be swichted here check rotation matrices
-      rotationX = mouseRotateStartRotate[0] + deltaY;
+      rotationX = mouseRotateStartRotate[0] - deltaY;
       rotationY = mouseRotateStartRotate[1] - deltaX;
     }
     // right mouse button
-    if (mouseRotateButton === 2) {
+    if (mouseAction === 'scale') {
       const factor = canvas.clientHeight / 4;
       scaleX = mouseRotateStartScale[0] + deltaY / factor;
       scaleY = mouseRotateStartScale[1] + deltaY / factor;
@@ -84,8 +94,11 @@
 
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
     canvas.addEventListener('mousedown', onMouseDown);
+    canvas.addEventListener('touchstart', onMouseDown);
     canvas.addEventListener('mouseup', onMouseUp);
+    canvas.addEventListener('touchend', onMouseUp);
     canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('touchmove', onMouseMove);
 
     gl = engine.gl;
     program = new Program(gl);
@@ -236,7 +249,7 @@
       zFar,
     );
 
-    const cameraPosition = [100, 150, 200];
+    const cameraPosition = [0, 0, 400];
     const up = [0, 1, 0];
 
     // Draw a F at the origin with rotation
@@ -363,13 +376,15 @@
 <style lang="less">
   .engine {
     position: relative;
-    height: 100%;
     overflow: hidden;
+    width: 100%;
+    height: 100%;
   }
 
   canvas {
-    width: 100dvw;
-    height: 100dvh;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     border: 1px solid const(--accent);
     background-color: #f7f5ed;
   }

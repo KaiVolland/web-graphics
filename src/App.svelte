@@ -48,6 +48,8 @@
     }
 
     main {
+      position: relative;
+      height: 100%;
       flex: 1;
       overflow: auto;
     }
