@@ -121,6 +121,9 @@ export const m3 = {
   },
 };
 
+/**
+ * Represents a collection of utility functions for working with 4x4 matrices.
+ */
 export const m4 = {
   identity: [
     1, 0, 0, 0,
@@ -128,6 +131,15 @@ export const m4 = {
     0, 0, 1, 0,
     0, 0, 0, 1,
   ],
+
+  transpose: function(m: number[]) {
+    return [
+      m[0], m[4], m[8], m[12],
+      m[1], m[5], m[9], m[13],
+      m[2], m[6], m[10], m[14],
+      m[3], m[7], m[11], m[15],
+    ];
+  },
 
   inverse: function (m: number[]) {
     var m00 = m[0 * 4 + 0];
@@ -249,6 +261,13 @@ export const m4 = {
     ];
   },
 
+  /**
+   * Multiplies two 4x4 matrices
+   *
+   * @param a a 4x4 matrix
+   * @param b a 4x4 matrix
+   * @returns The new 4x4 matrix
+   */
   multiply: function (a: number[], b: number[]) {
     const b00 = b[0 * 4 + 0];
     const b01 = b[0 * 4 + 1];
@@ -303,22 +322,61 @@ export const m4 = {
     ];
   },
 
+  /**
+   * Translates a 4x4 matrix in the corresponding directions.
+   *
+   * @param m The initial 4x4 matrix
+   * @param tx The translation in the x axis
+   * @param ty The translation in the y axis
+   * @param tz The translation in the z axis
+   * @returns The new 4x4 matrix
+   */
   translate: function (m: number[], tx: number, ty: number, tz: number) {
     return m4.multiply(m, m4.translation(tx, ty, tz));
   },
 
+  /**
+   * Rotates 4x4 matrix around the x axis.
+   *
+   * @param m The initial 4x4 matrix
+   * @param angleInRadians The rotation angle in radians
+   * @returns The new 4x4 matrix
+   */
   xRotate: function (m: number[], angleInRadians: number) {
     return m4.multiply(m, m4.xRotation(angleInRadians));
   },
 
+  /**
+   * Rotates 4x4 matrix around the y axis.
+   *
+   * @param m The initial 4x4 matrix
+   * @param angleInRadians The rotation angle in radians
+   * @returns The new 4x4 matrix
+   */
   yRotate: function (m: number[], angleInRadians: number) {
     return m4.multiply(m, m4.yRotation(angleInRadians));
   },
 
+  /**
+   * Rotates 4x4 matrix around the z axis.
+   *
+   * @param m The initial 4x4 matrix
+   * @param angleInRadians The rotation angle in radians
+   * @returns The new 4x4 matrix
+   */
   zRotate: function (m: number[], angleInRadians: number) {
     return m4.multiply(m, m4.zRotation(angleInRadians));
   },
 
+  /**
+   * Scales a 4x4 matrix in the corresponding directions.
+   *
+   * @param m The initial 4x4 matrix
+   * @param sx The scaling in the x axis
+   * @param sy The scaling in the y axis
+   * @param sz The scaling in the z axis
+   * @returns The new 4x4 matrix
+   */
   scale: function (m: number[], sx: number, sy: number, sz: number) {
     return m4.multiply(m, m4.scaling(sx, sy, sz));
   },

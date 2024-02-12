@@ -8,27 +8,31 @@
   import { Program } from '../engine/Program';
   import { Attribute } from '../engine/Attribute';
   import { Uniform } from '../engine/Uniform';
-  import { F, FColor } from '../engine/shapes/3d/Chars';
-  import { degreesToRadians, m4 } from '../engine/util/Math';
+  import { F, FColor, FNormals } from '../engine/shapes/3d/Chars';
+  import { degreesToRadians, m4, v3 } from '../engine/util/Math';
   import { hexToRGB } from '../engine/util/Color';
 
   let canvas: HTMLCanvasElement;
   let color: string = '#0E86E1';
-  let translationX: number = -150;
+  let translationX: number = 0;
   let translationY: number = 0;
-  let translationZ: number = -360;
-  let rotationX: number = 190;
-  let rotationY: number = 40;
-  let rotationZ: number = 30;
+  let translationZ: number = 0;
+  let rotationX: number = 0;
+  let rotationY: number = 0;
+  let rotationZ: number = 0;
   let scaleX: number = 1;
   let scaleY: number = 1;
   let scaleZ: number = 1;
   let gl: WebGL2RenderingContext;
   let colorUniform: Uniform;
+  let reverseLightingDirectionUniform: Uniform;
 
-  let transformationUniform: Uniform;
+  let worldInverseTranspose: Uniform;
+  let worldViewUniform: Uniform;
   let positionAttribute: Attribute;
   let colorAttribute: Attribute;
+  let normalsAttribute: Attribute;
+  let program: Program;
 
   let mouseRotateActive = false;
   let mouseRotateStartPosition = [0, 0];
@@ -57,13 +61,8 @@
     const deltaX = mouseRotateStartPosition[0] - event.clientX;
     const deltaY = mouseRotateStartPosition[1] - event.clientY;
 
-    // left mouse button
-    if (mouseRotateButton === 0) {
-      translationX = mouseRotateStartTranslate[0] - deltaX;
-      translationY = mouseRotateStartTranslate[1] - deltaY;
-    }
     // mousewheel
-    if (mouseRotateButton === 1) {
+    if (mouseRotateButton === 0) {
       // FIXME: The axis seem to be swichted here check rotation matrices
       rotationX = mouseRotateStartRotate[0] + deltaY;
       rotationY = mouseRotateStartRotate[1] - deltaX;
@@ -89,7 +88,7 @@
     canvas.addEventListener('mousemove', onMouseMove);
 
     gl = engine.gl;
-    const program = new Program(gl);
+    program = new Program(gl);
     const vertexShader = new VertexShader({
       gl,
       source: vertexShaderSource,
@@ -133,7 +132,7 @@
     }
     positionAttribute.setBufferData(F);
 
-    // TODO: Move to Mesh class? mesh.draw();
+    // // TODO: Move to Mesh class? mesh.draw();
     colorAttribute = new Attribute({
       gl,
       name: 'a_color',
@@ -146,6 +145,18 @@
     });
     colorAttribute.setBufferData(FColor);
 
+    normalsAttribute = new Attribute({
+      gl,
+      name: 'a_normal',
+      program,
+      pointerProperties: {
+        size: 3,
+        // normalize: true,
+        type: gl.FLOAT,
+      },
+    });
+    normalsAttribute.setBufferData(FNormals);
+
     // Bind the attribute/buffer set we want.
     gl.bindVertexArray(positionAttribute.vao);
 
@@ -156,13 +167,29 @@
       type: '4fv',
       name: 'u_color',
       program,
-      value: [colorR, colorG, colorB, 1],
+      value: [colorR, colorG, colorB, 1]
     });
 
-    transformationUniform = new Uniform({
+    reverseLightingDirectionUniform = new Uniform({
+      gl,
+      type: '3fv',
+      name: 'u_reverseLightDirection',
+      program,
+      value: v3.normalize([0.5, 0.7, 1]),
+    });
+
+    worldInverseTranspose = new Uniform({
       gl,
       type: 'matrix4fv',
-      name: 'u_transformation',
+      name: 'u_worldInverseTranspose',
+      program,
+      value: m4.transpose(m4.inverse(m4.identity)),
+    });
+
+    worldViewUniform = new Uniform({
+      gl,
+      type: 'matrix4fv',
+      name: 'u_worldViewProjection',
       program,
       value: m4.identity,
     });
@@ -189,24 +216,9 @@
 
     const aspect = canvasWidth / canvasHeight;
     const zNear = 1;
-    const zFar = 2000;
+    const zFar = 10000;
     const fieldOfViewRadians = degreesToRadians(60);
-    // let matrix = m4.perspective(
-    //   degreesToRadians(fieldOfViewRadians),
-    //   aspect,
-    //   zNear,
-    //   zFar,
-    // );
-    // matrix = m4.translate(matrix, translationX, translationY, translationZ);
-    // matrix = m4.xRotate(matrix, degreesToRadians(360 - rotationX));
-    // matrix = m4.yRotate(matrix, degreesToRadians(360 - rotationY));
-    // matrix = m4.zRotate(matrix, degreesToRadians(360 - rotationZ));
-    // matrix = m4.scale(matrix, scaleX, scaleY, scaleZ);
 
-    // transformationUniform.value = matrix;
-
-    const numFs = 5;
-    const radius = 200;
     // Compute the matrix
     const projectionMatrix = m4.perspective(
       fieldOfViewRadians,
@@ -215,53 +227,41 @@
       zFar,
     );
 
-    const rotation = time ? time / 10 : 0;
-    const fPosition = [radius, 0, 0];
-
-    let cameraMatrix = m4.yRotation(degreesToRadians(rotation));
-    cameraMatrix = m4.translate(cameraMatrix, 0, 0, radius * 1.5);
-
-    // Get the camera's position from the matrix we computed
-    const cameraPosition = [cameraMatrix[12], cameraMatrix[13], cameraMatrix[14]];
+    const cameraPosition = [100, 150, 200];
     const up = [0, 1, 0];
 
-    // Compute the camera's matrix using look at.
-    cameraMatrix = m4.lookAt(cameraPosition, fPosition, up);
+    // Draw a F at the origin with rotation
+    let worldMatrix = m4.yRotate(m4.identity, degreesToRadians(rotationY));
+    worldMatrix = m4.xRotate(worldMatrix, degreesToRadians(rotationX));
+    worldMatrix = m4.zRotate(worldMatrix, degreesToRadians(rotationZ));
+    worldMatrix = m4.translate(worldMatrix, translationX, translationY, translationZ);
+
+  const fPosition = [worldMatrix[12], worldMatrix[13], worldMatrix[14]];
+  const cameraMatrix = m4.lookAt(cameraPosition, fPosition, up);
 
     // Make a view matrix from the camera matrix.
     const viewMatrix = m4.inverse(cameraMatrix);
 
     // move the projection space to view space (the space in front of
     // the camera)
-    const viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
-    // Draw 'F's in a circle
-    for (let ii = 0; ii < numFs; ++ii) {
-      const angle = (ii * Math.PI * 2) / numFs;
+    let viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
 
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      // add in the translation for this F
-      const matrix = m4.translate(viewProjectionMatrix, x, 0, z);
+    const worldViewProjectionMatrix = m4.multiply(viewProjectionMatrix, worldMatrix);
 
-      // Set the matrix.
-      transformationUniform.value = matrix;
-
-      // Draw the geometry.
-      const primitiveType = gl.TRIANGLES;
-      const offset = 0;
-      const count = 16 * 6;
-      gl.drawArrays(primitiveType, offset, count);
-    }
+    // Set the matrix.
+    worldInverseTranspose.value = worldMatrix;
+    worldViewUniform.value = worldViewProjectionMatrix;
 
     // TODO: Move to Mesh class? mesh.draw();
     // Draw the geometry.
     positionAttribute.setBufferData(F);
+    normalsAttribute.setBufferData(FNormals);
     colorAttribute.setBufferData(FColor);
 
-    // const primitiveType = gl.TRIANGLES;
-    // const offset = 0;
-    // const count = F.length / 3;
-    // gl.drawArrays(primitiveType, offset, count);
+    const primitiveType = gl.TRIANGLES;
+    const offset = 0;
+    const count = F.length / 3;
+    gl.drawArrays(primitiveType, offset, count);
 
     requestAnimationFrame(draw);
   }
@@ -280,7 +280,6 @@
   </div>
   <div class="control">
     <span class="label">Scale:</span>
-    <span class="label">x</span>
     <input type="number" bind:value={scaleX} min={0.1} max={3} step={0.1} />
     <span class="label">y</span>
     <input type="number" bind:value={scaleY} min={0.1} max={3} step={0.1} />
