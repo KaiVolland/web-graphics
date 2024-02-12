@@ -2,6 +2,7 @@ import type { Program } from "./Program";
 
 export type PeterConstructorParams = HTMLCanvasElement;
 
+// TODO: This class should be renamed
 export class Engine {
 
   private _gl: WebGL2RenderingContext | null = null;

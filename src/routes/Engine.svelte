@@ -83,9 +83,9 @@
     }
 
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
-    canvas.addEventListener('mousedown', onMouseDown);
-    canvas.addEventListener('mouseup', onMouseUp);
-    canvas.addEventListener('mousemove', onMouseMove);
+    canvas.addEventListener('pointerdown', onMouseDown);
+    canvas.addEventListener('pointerup', onMouseUp);
+    canvas.addEventListener('pointermove', onMouseMove);
 
     gl = engine.gl;
     program = new Program(gl);
@@ -167,7 +167,7 @@
       type: '4fv',
       name: 'u_color',
       program,
-      value: [colorR, colorG, colorB, 1]
+      value: [colorR, colorG, colorB, 1],
     });
 
     reverseLightingDirectionUniform = new Uniform({
@@ -234,10 +234,15 @@
     let worldMatrix = m4.yRotate(m4.identity, degreesToRadians(rotationY));
     worldMatrix = m4.xRotate(worldMatrix, degreesToRadians(rotationX));
     worldMatrix = m4.zRotate(worldMatrix, degreesToRadians(rotationZ));
-    worldMatrix = m4.translate(worldMatrix, translationX, translationY, translationZ);
+    worldMatrix = m4.translate(
+      worldMatrix,
+      translationX,
+      translationY,
+      translationZ,
+    );
 
-  const fPosition = [worldMatrix[12], worldMatrix[13], worldMatrix[14]];
-  const cameraMatrix = m4.lookAt(cameraPosition, fPosition, up);
+    const fPosition = [worldMatrix[12], worldMatrix[13], worldMatrix[14]];
+    const cameraMatrix = m4.lookAt(cameraPosition, fPosition, up);
 
     // Make a view matrix from the camera matrix.
     const viewMatrix = m4.inverse(cameraMatrix);
@@ -246,7 +251,10 @@
     // the camera)
     let viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
 
-    const worldViewProjectionMatrix = m4.multiply(viewProjectionMatrix, worldMatrix);
+    const worldViewProjectionMatrix = m4.multiply(
+      viewProjectionMatrix,
+      worldMatrix,
+    );
 
     // Set the matrix.
     worldInverseTranspose.value = worldMatrix;
@@ -267,62 +275,124 @@
   }
 </script>
 
-<canvas bind:this={canvas} width="512" height="512"></canvas>
-<div class="controls">
-  <div class="control">
-    <span class=".label">Positon:</span>
-    <span class="label">x</span>
-    <input type="number" bind:value={translationX} />
-    <span class="label">y</span>
-    <input type="number" bind:value={translationY} />
-    <span class="label">z</span>
-    <input type="number" bind:value={translationZ} />
-  </div>
-  <div class="control">
-    <span class="label">Scale:</span>
-    <input type="number" bind:value={scaleX} min={0.1} max={3} step={0.1} />
-    <span class="label">y</span>
-    <input type="number" bind:value={scaleY} min={0.1} max={3} step={0.1} />
-    <span class="label">z</span>
-    <input type="number" bind:value={scaleZ} min={0.1} max={3} step={0.1} />
-  </div>
-  <div class="control">
-    <span class="label">Rotation:</span>
-    <span class="label">x</span>
-    <input
-      type="number"
-      bind:value={rotationX}
-      step={15}
-      min={-360}
-      max={360}
-    />
-    <span class="label">y</span>
-    <input
-      type="number"
-      bind:value={rotationY}
-      step={15}
-      min={-360}
-      max={360}
-    />
-    <span class="label">z</span>
-    <input
-      type="number"
-      bind:value={rotationZ}
-      step={15}
-      min={-360}
-      max={360}
-    />
+<div class="engine">
+  <canvas
+    bind:this={canvas}
+    width={window.innerWidth}
+    height={window.innerHeight}
+  ></canvas>
+  <div class="controls">
+    <div class="control">
+      <span class="field">
+        <span class=".label">Positon:</span>
+      </span>
+      <span class="field">
+        <span class="label">x</span>
+        <input type="number" bind:value={translationX} />
+      </span>
+      <span class="field">
+        <span class="label">y</span>
+        <input type="number" bind:value={translationY} min={-1000} max={1000} />
+      </span>
+      <span class="field">
+        <span class="label">z</span>
+        <input type="number" bind:value={translationZ} min={-1000} max={1000} />
+      </span>
+    </div>
+    <div class="control">
+      <span class="field">
+        <span class="label">Scale:</span>
+      </span>
+      <span class="field">
+        <span class="label">x</span>
+        <input type="number" bind:value={scaleX} min={0.1} max={3} step={0.1} />
+      </span>
+      <span class="field">
+        <span class="label">y</span>
+        <input type="number" bind:value={scaleY} min={0.1} max={3} step={0.1} />
+      </span>
+      <span class="field">
+        <span class="label">z</span>
+        <input type="number" bind:value={scaleZ} min={0.1} max={3} step={0.1} />
+      </span>
+    </div>
+    <div class="control">
+      <span class="field">
+        <span class="label">Rotation:</span>
+      </span>
+      <span class="field">
+        <span class="label">x</span>
+        <input
+          type="number"
+          bind:value={rotationX}
+          step={15}
+          min={-360}
+          max={360}
+        />
+      </span>
+      <span class="field">
+        <span class="label">y</span>
+        <input
+          type="number"
+          bind:value={rotationY}
+          step={15}
+          min={-360}
+          max={360}
+        />
+      </span>
+      <span class="field">
+        <span class="label">z</span>
+        <input
+          type="number"
+          bind:value={rotationZ}
+          step={15}
+          min={-360}
+          max={360}
+        />
+      </span>
+    </div>
   </div>
 </div>
 
 <style lang="less">
+  .engine {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+
   canvas {
+    width: 100%;
+    height: 100%;
     border: 1px solid const(--accent);
     background-color: #f7f5ed;
   }
 
   .controls {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+
     .control {
+      display: flex;
+      flex: 1;
+
+      .field {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+
+        input[type='number'] {
+          flex: 1;
+          max-width: 50px;
+        }
+
+        &:first-child {
+          justify-content: flex-end;
+        }
+      }
       .label {
         margin-right: 0.25em;
       }
