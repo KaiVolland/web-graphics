@@ -25,8 +25,13 @@
   let scaleZ: number = 1;
   let gl: WebGL2RenderingContext;
   let colorUniform: Uniform;
-  let reverseLightingDirectionUniform: Uniform;
+  let lightWorldPosition: Uniform;
+  let viewWorldPosition: Uniform;
+  let shininess: Uniform;
+  let specularColor: Uniform;
+  let lightColor: Uniform;
 
+  let world: Uniform;
   let worldInverseTranspose: Uniform;
   let worldViewUniform: Uniform;
   let positionAttribute: Attribute;
@@ -175,6 +180,32 @@
 
     const [colorR, colorG, colorB] = hexToRGB(color, true);
 
+    lightColor = new Uniform({
+      gl,
+      type: '3fv',
+      name: 'u_lightColor',
+      program,
+      // red light
+      value: v3.normalize([1, 0.6, 0.6]),
+    });
+
+    specularColor = new Uniform({
+      gl,
+      type: '3fv',
+      name: 'u_specularColor',
+      program,
+      // red light
+      value: v3.normalize([1, 0.2, 0.2]),
+    });
+
+    shininess = new Uniform({
+      gl,
+      type: '1f',
+      name: 'u_shininess',
+      program,
+      value: 50,
+    });
+
     colorUniform = new Uniform({
       gl,
       type: '4fv',
@@ -183,12 +214,28 @@
       value: [colorR, colorG, colorB, 1],
     });
 
-    reverseLightingDirectionUniform = new Uniform({
+    viewWorldPosition = new Uniform({
       gl,
       type: '3fv',
-      name: 'u_reverseLightDirection',
+      name: 'u_viewWorldPosition',
       program,
-      value: v3.normalize([0.5, 0.7, 1]),
+      value: [0, 0, 400],
+    });
+
+    lightWorldPosition = new Uniform({
+      gl,
+      type: '3fv',
+      name: 'u_lightWorldPosition',
+      program,
+      value: [20, 30, 50],
+    });
+
+    world = new Uniform({
+      gl,
+      type: 'matrix4fv',
+      name: 'u_world',
+      program,
+      value: m4.identity,
     });
 
     worldInverseTranspose = new Uniform({

@@ -47,6 +47,8 @@ export class Uniform {
     if (!Array.isArray(value)) {
       switch (this._type) {
         case '1f':
+          this._gl.uniform1f(this.getLocation(), value as number);
+          break;
         case '1i':
           this._gl.uniform1i(this.getLocation(), value as number);
           break;
@@ -55,17 +57,23 @@ export class Uniform {
       }
     } else {
       switch (this._type) {
-        case '2i':
         case '2f':
           this._gl.uniform2f(this.getLocation(), value[0], value[1]);
           break;
+        case '2i':
+          this._gl.uniform2i(this.getLocation(), value[0], value[1]);
+          break;
         case '3f':
-        case '3i':
           this._gl.uniform3f(this.getLocation(), value[0], value[1], value[2]);
           break;
+        case '3i':
+          this._gl.uniform3i(this.getLocation(), value[0], value[1], value[2]);
+          break;
         case '4f':
-        case '4i':
           this._gl.uniform4f(this.getLocation(), value[0], value[1], value[2], value[3]);
+          break;
+        case '4i':
+          this._gl.uniform4i(this.getLocation(), value[0], value[1], value[2], value[3]);
           break;
         case 'matrix2fv':
           this._gl.uniformMatrix2fv(this.getLocation(), false, value);
