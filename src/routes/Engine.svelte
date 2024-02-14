@@ -10,10 +10,8 @@
   import { Uniform } from '../engine/Uniform';
   import { F, FColor, FNormals } from '../engine/shapes/3d/Chars';
   import { degreesToRadians, m4, v3 } from '../engine/util/Math';
-  import { hexToRGB } from '../engine/util/Color';
 
   let canvas: HTMLCanvasElement;
-  let color: string = '#0E86E1';
   let translationX: number = 0;
   let translationY: number = 0;
   let translationZ: number = 0;
@@ -24,7 +22,6 @@
   let scaleY: number = 1;
   let scaleZ: number = 1;
   let gl: WebGL2RenderingContext;
-  let colorUniform: Uniform;
   let lightWorldPosition: Uniform;
   let viewWorldPosition: Uniform;
   let shininess: Uniform;
@@ -169,7 +166,6 @@
       program,
       pointerProperties: {
         size: 3,
-        // normalize: true,
         type: gl.FLOAT,
       },
     });
@@ -178,14 +174,11 @@
     // Bind the attribute/buffer set we want.
     gl.bindVertexArray(positionAttribute.vao);
 
-    const [colorR, colorG, colorB] = hexToRGB(color, true);
-
     lightColor = new Uniform({
       gl,
       type: '3fv',
       name: 'u_lightColor',
       program,
-      // red light
       value: v3.normalize([1, 0.6, 0.6]),
     });
 
@@ -194,7 +187,6 @@
       type: '3fv',
       name: 'u_specularColor',
       program,
-      // red light
       value: v3.normalize([1, 0.2, 0.2]),
     });
 
@@ -204,14 +196,6 @@
       name: 'u_shininess',
       program,
       value: 50,
-    });
-
-    colorUniform = new Uniform({
-      gl,
-      type: '4fv',
-      name: 'u_color',
-      program,
-      value: [colorR, colorG, colorB, 1],
     });
 
     viewWorldPosition = new Uniform({
@@ -279,9 +263,6 @@
 
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.DEPTH_TEST);
-
-    const [colorR, colorG, colorB] = hexToRGB(color, true);
-    colorUniform.value = [colorR, colorG, colorB, 1];
 
     const aspect = canvasWidth / canvasHeight;
     const zNear = 1;

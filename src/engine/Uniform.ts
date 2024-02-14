@@ -32,7 +32,10 @@ export class Uniform {
     if (program) {
       this._program = program;
     }
-    if (value) {
+    // TODO: This console.log delays the code so it runs properly
+    // TODO: Find out why this is happening
+    console.log(`Creating uniform ${name} with type ${type} and value ${value}`);
+    if (value !== undefined) {
       this.value = value;
     }
   }
@@ -43,14 +46,15 @@ export class Uniform {
 
   set value(value: number | number[] | null) {
     this._value = value;
+    const location = this.getLocation();
 
     if (!Array.isArray(value)) {
       switch (this._type) {
         case '1f':
-          this._gl.uniform1f(this.getLocation(), value as number);
+          this._gl.uniform1f(location, value as number);
           break;
         case '1i':
-          this._gl.uniform1i(this.getLocation(), value as number);
+          this._gl.uniform1i(location, value as number);
           break;
         default:
           throw `Invalid value ${value} for type ${this._type}`;
@@ -58,40 +62,40 @@ export class Uniform {
     } else {
       switch (this._type) {
         case '2f':
-          this._gl.uniform2f(this.getLocation(), value[0], value[1]);
+          this._gl.uniform2f(location, value[0], value[1]);
           break;
         case '2i':
-          this._gl.uniform2i(this.getLocation(), value[0], value[1]);
+          this._gl.uniform2i(location, value[0], value[1]);
           break;
         case '3f':
-          this._gl.uniform3f(this.getLocation(), value[0], value[1], value[2]);
+          this._gl.uniform3f(location, value[0], value[1], value[2]);
           break;
         case '3i':
-          this._gl.uniform3i(this.getLocation(), value[0], value[1], value[2]);
+          this._gl.uniform3i(location, value[0], value[1], value[2]);
           break;
         case '4f':
-          this._gl.uniform4f(this.getLocation(), value[0], value[1], value[2], value[3]);
+          this._gl.uniform4f(location, value[0], value[1], value[2], value[3]);
           break;
         case '4i':
-          this._gl.uniform4i(this.getLocation(), value[0], value[1], value[2], value[3]);
+          this._gl.uniform4i(location, value[0], value[1], value[2], value[3]);
           break;
         case 'matrix2fv':
-          this._gl.uniformMatrix2fv(this.getLocation(), false, value);
+          this._gl.uniformMatrix2fv(location, false, value);
           break;
         case 'matrix3fv':
-          this._gl.uniformMatrix3fv(this.getLocation(), false, value);
+          this._gl.uniformMatrix3fv(location, false, value);
           break;
         case 'matrix4fv':
-          this._gl.uniformMatrix4fv(this.getLocation(), false, value);
+          this._gl.uniformMatrix4fv(location, false, value);
           break;
         case '2fv':
-          this._gl.uniform2fv(this.getLocation(), value);
+          this._gl.uniform2fv(location, value);
           break;
         case '3fv':
-          this._gl.uniform3fv(this.getLocation(), value);
+          this._gl.uniform3fv(location, value);
           break;
         case '4fv':
-          this._gl.uniform4fv(this.getLocation(), value);
+          this._gl.uniform4fv(location, value);
           break;
         default:
           throw `Invalid value ${value} for type ${this._type}`;
