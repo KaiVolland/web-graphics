@@ -66,7 +66,38 @@ export class Matrix4 extends Matrix<Array16> {
     0, 0, 0, 1
   ];
 
+  static perspective(fieldOfViewInRadians: number, aspect: number, near: number, far: number): Matrix4 {
+    const f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
+    const rangeInv = 1.0 / (near - far);
+    return new Matrix4([
+      f / aspect, 0, 0, 0,
+      0, f, 0, 0,
+      0, 0, (near + far) * rangeInv, -1,
+      0, 0, near * far * rangeInv * 2, 0
+    ]);
+  };
+
+  static orthographic(
+    left: number,
+    right: number,
+    bottom: number,
+    top: number,
+    near: number,
+    far: number
+    ): Matrix4 {
+    return new Matrix4([
+      2 / (right - left), 0, 0, 0,
+      0, 2 / (top - bottom), 0, 0,
+      0, 0, 2 / (near - far), 0,
+
+      (left + right) / (left - right),
+      (bottom + top) / (bottom - top),
+      (near + far) / (near - far),
+      1,
+    ]);
+  };
+
   protected create(values?: Array16): Array16 {
     return values ? values : Matrix4.identity;
-  }
+  };
 }
