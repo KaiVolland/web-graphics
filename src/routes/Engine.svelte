@@ -9,7 +9,9 @@
   import { Attribute } from '../engine/Attribute';
   import { Uniform } from '../engine/Uniform';
   import { F, FColor, FNormals } from '../engine/shapes/3d/Chars';
-  import { degreesToRadians, m4, v3 } from '../engine/util/Math';
+  import { degreesToRadians, m4 } from '../engine/util/Math';
+  import { Vector3 } from '../engine/models/math/Vector';
+  import { Matrix4 } from '../engine/models/math/Matrix';
 
   let canvas: HTMLCanvasElement;
   let translationX: number = 0;
@@ -179,7 +181,7 @@
       type: '3fv',
       name: 'u_lightColor',
       program,
-      value: v3.normalize([1, 0.6, 0.6]),
+      value: new Vector3([1, 0.6, 0.6]).normalize().values
     });
 
     specularColor = new Uniform({
@@ -187,7 +189,7 @@
       type: '3fv',
       name: 'u_specularColor',
       program,
-      value: v3.normalize([1, 0.2, 0.2]),
+      value: new Vector3([1, 0.2, 0.2]).normalize().values
     });
 
     shininess = new Uniform({
@@ -203,7 +205,7 @@
       type: '3fv',
       name: 'u_viewWorldPosition',
       program,
-      value: [0, 0, 400],
+      value: new Vector3([0, 0, 400]).values,
     });
 
     lightWorldPosition = new Uniform({
@@ -211,7 +213,7 @@
       type: '3fv',
       name: 'u_lightWorldPosition',
       program,
-      value: [20, 30, 50],
+      value: new Vector3([20, 30, 50]).values,
     });
 
     world = new Uniform({
@@ -219,7 +221,7 @@
       type: 'matrix4fv',
       name: 'u_world',
       program,
-      value: m4.identity,
+      value: Matrix4.identity,
     });
 
     worldInverseTranspose = new Uniform({
@@ -227,7 +229,7 @@
       type: 'matrix4fv',
       name: 'u_worldInverseTranspose',
       program,
-      value: m4.transpose(m4.inverse(m4.identity)),
+      value: m4.transpose(m4.inverse(Matrix4.identity)),
     });
 
     worldViewUniform = new Uniform({
@@ -277,8 +279,7 @@
       zFar,
     );
 
-    const cameraPosition = [0, 0, 400];
-    const up = [0, 1, 0];
+    const cameraPosition = new Vector3([0, 0, 400]);
 
     // Draw a F at the origin with rotation
     let worldMatrix = m4.yRotate(m4.identity, degreesToRadians(rotationY));
@@ -291,8 +292,8 @@
       translationZ,
     );
 
-    const fPosition = [worldMatrix[12], worldMatrix[13], worldMatrix[14]];
-    const cameraMatrix = m4.lookAt(cameraPosition, fPosition, up);
+    const fPosition = new Vector3([worldMatrix[12], worldMatrix[13], worldMatrix[14]]);
+    const cameraMatrix = m4.lookAt(cameraPosition, fPosition);
 
     // Make a view matrix from the camera matrix.
     const viewMatrix = m4.inverse(cameraMatrix);

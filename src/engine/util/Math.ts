@@ -1,3 +1,5 @@
+import { Vector, Vector3 } from "../models/math/Vector";
+
 export function rotationVectorFromAngle(angleInDegrees: number) {
   const angleInRadians = angleInDegrees * Math.PI / 180;
   return [Math.sin(angleInRadians), Math.cos(angleInRadians)];
@@ -10,28 +12,6 @@ export function radiansToDegrees(radians: number): number {
 export function degreesToRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
-
-export const v3 = {
-  cross: function (a: number[], b: number[]) {
-    return [a[1] * b[2] - a[2] * b[1],
-    a[2] * b[0] - a[0] * b[2],
-    a[0] * b[1] - a[1] * b[0]];
-  },
-
-  subtract: function (a: number[], b: number[]) {
-    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
-  },
-
-  normalize: function (v: number[]) {
-    var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    // make sure we don't divide by 0.
-    if (length > 0.00001) {
-      return [v[0] / length, v[1] / length, v[2] / length];
-    } else {
-      return [0, 0, 0];
-    }
-  }
-};
 
 export const m3 = {
   identity: [
@@ -446,18 +426,20 @@ export const m4 = {
     return dst;
   },
 
-  lookAt: function (cameraPosition: number[], target: number[], up: number[]) {
-    var zAxis = v3.normalize(v3.subtract(cameraPosition, target));
-    var xAxis = v3.normalize(v3.cross(up, zAxis));
-    var yAxis = v3.normalize(v3.cross(zAxis, xAxis));
+  lookAt: function (cameraPosition: Vector3, targetVector: Vector3, upVector = new Vector3([0, 1, 0])) {
+
+    // TODO: check why "as Vector3" is needed
+    var zAxis = Vector.substract(cameraPosition, targetVector).normalize() as Vector3;
+    var xAxis = Vector3.cross(upVector, zAxis).normalize() as Vector3;
+    var yAxis = Vector3.cross(zAxis, xAxis).normalize();
 
     return [
-      xAxis[0], xAxis[1], xAxis[2], 0,
-      yAxis[0], yAxis[1], yAxis[2], 0,
-      zAxis[0], zAxis[1], zAxis[2], 0,
-      cameraPosition[0],
-      cameraPosition[1],
-      cameraPosition[2],
+      xAxis.values[0], xAxis.values[1], xAxis.values[2], 0,
+      yAxis.values[0], yAxis.values[1], yAxis.values[2], 0,
+      zAxis.values[0], zAxis.values[1], zAxis.values[2], 0,
+      cameraPosition.values[0],
+      cameraPosition.values[1],
+      cameraPosition.values[2],
       1,
     ];
   },

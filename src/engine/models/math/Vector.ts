@@ -6,13 +6,32 @@ export type VectorValues = Vector1D | Vector2D | Vector3D | Vector4D;
 
 export abstract class Vector<T extends VectorValues> {
 
-    protected _values: T;
+    // TODO: the typing is ok but the code could be smarter
+    static substract<T extends VectorValues>(v1: Vector<T>, v2: Vector<T>): Vector<T> {
+        if (v1.is1D(v1) && v2.is1D(v2)) {
+            return new Vector1([v1._values[0] - v2._values[0]]) as unknown as Vector<T>;
+        }
+        if (v1.is2D(v1) && v2.is2D(v2)) {
+            return new Vector2([v1._values[0] - v2._values[0], v1._values[1] - v2._values[1]]) as unknown as Vector<T>;
+        }
+        if (v1.is3D(v1) && v2.is3D(v2)) {
+            return new Vector3([v1._values[0] - v2._values[0], v1._values[1] - v2._values[1], v1._values[2] - v2._values[2]]) as unknown as Vector<T>;
+        }
+        if (v1.is4D(v1) && v2.is4D(v2)) {
+            return new Vector4([v1._values[0] - v2._values[0], v1._values[1] - v2._values[1], v1._values[2] - v2._values[2], v1._values[3] - v2._values[3]]) as unknown as Vector<T>;
+        }
+        throw new Error("Vectors must have the same dimension to subtract.");
+    }
+
+    static dot<T extends VectorValues>(v1: Vector<T>, v2: Vector<T>): number {
+        return v1._values.reduce((sum, val, i) => sum + val * v2._values[i], 0);
+    }
 
     constructor(values: T) {
         this._values = this.create(values);
     }
 
-    protected abstract create(values?: T): T;
+    protected _values: T;
 
     get values(): T {
         return this._values;
@@ -22,20 +41,23 @@ export abstract class Vector<T extends VectorValues> {
         this._values = values;
     }
 
-    dot(vector: Vector<T>): number {
-        return this._values.reduce((sum, val, i) => sum + val * vector._values[i], 0);
+    protected abstract create(values?: T): T;
+
+    is1D(vector: Vector<VectorValues>): vector is Vector1 {
+        return vector.values.length === 1;
     }
 
-    // // TODO: Move to math util
-    // subtract(vector: Vector<T>): Vector<T> {
-    //     if (this._values.length !== vector._values.length) {
-    //         throw new Error("Vectors must have the same dimension to subtract.");
-    //     }
+    is2D(vector: Vector<VectorValues>): vector is Vector2 {
+        return vector.values.length === 2;
+    }
 
-    //     const resultValues: T = this._values.map((val, i) => val - vector._values[i]) as T;
-    //     this._values = resultValues;
-    //     return this;
-    // }
+    is3D(vector: Vector<VectorValues>): vector is Vector3 {
+        return vector.values.length === 3;
+    }
+
+    is4D(vector: Vector<VectorValues>): vector is Vector4 {
+        return vector.values.length === 4;
+    }
 
     normalize(): Vector<T> {
         const magnitude = Math.sqrt(this._values.reduce((sum, val) => sum + val * val, 0));
@@ -43,7 +65,15 @@ export abstract class Vector<T extends VectorValues> {
         this._values = resultValues;
         return this;
     }
+
+    toNormalized(): Vector<T> {
+        const magnitude = Math.sqrt(this._values.reduce((sum, val) => sum + val * val, 0));
+        const resultValues: T = this._values.map(val => val / magnitude) as T;
+        const VectorConstructor = this.constructor as unknown as new (values: T) => Vector<T>;
+        return new VectorConstructor(resultValues);
+    }
 }
+
 
 export class Vector1 extends Vector<Vector1D> {
     protected create(values?: Vector1D | undefined): Vector1D {
@@ -63,19 +93,15 @@ export class Vector3 extends Vector<Vector3D> {
         return values ? values : [1, 1, 1];
     }
 
-    // // TODO: Think about moving this back to the util class
-    // cross(vector: Vector<Vector3D>): Vector<Vector3D> {
-    //     const [x1, y1, z1] = this._values;
-    //     const [x2, y2, z2] = vector.values;
+    static cross(v1: Vector3, v2: Vector3): Vector3 {
+        const resultValues: Vector3D = [
+            v1._values[1] * v2._values[2] - v1._values[2] * v2._values[1],
+            v1._values[2] * v2._values[0] - v1._values[0] * v2._values[2],
+            v1._values[0] * v2._values[1] - v1._values[1] * v2._values[0]
+        ];
+        return new Vector3(resultValues);
+    }
 
-    //     const resultValues: Vector3D = [
-    //         y1 * z2 - z1 * y2,
-    //         z1 * x2 - x1 * z2,
-    //         x1 * y2 - y1 * x2,
-    //     ];
-
-    //     return this.constructor(resultValues);
-    // }
 }
 
 export class Vector4 extends Vector<Vector4D> {
