@@ -4,7 +4,7 @@ export type Vector3D = [number, number, number];
 export type Vector4D = [number, number, number, number];
 export type VectorValues = Vector1D | Vector2D | Vector3D | Vector4D;
 
-abstract class Vector<T extends VectorValues> {
+export abstract class Vector<T extends VectorValues> {
 
     protected _values: T;
 

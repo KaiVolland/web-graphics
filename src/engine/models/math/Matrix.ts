@@ -3,7 +3,7 @@ export type Array9 = [number, number, number, number, number, number, number, nu
 export type Array16 = [number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number];
 export type MatrixValues = Array4 | Array9 | Array16;
 
-abstract class Matrix<T extends MatrixValues> {
+export abstract class Matrix<T extends MatrixValues> {
 
   protected _values: T;
 
