@@ -1,0 +1,125 @@
+import { expect, describe, it } from "bun:test";
+
+import {
+  Matrix2,
+  Matrix3,
+  Matrix4,
+  type Array4,
+  type Array9,
+  type Array16
+} from './Matrix';
+
+describe('Matrix2', () => {
+  it('should create a Matrix2 instance', () => {
+    const matrix = new Matrix2();
+    expect(matrix).toBeInstanceOf(Matrix2);
+  });
+
+  it('should create a Matrix2 instance with specified values', () => {
+    const values: Array4 = [
+      1, 2,
+      3, 4
+    ];
+    const matrix = new Matrix2(values);
+    expect(matrix.values).toEqual(values);
+  });
+
+  it('should create a Matrix2 instance with identity values if no values are specified', () => {
+    const matrix = new Matrix2();
+    expect(matrix.values).toEqual(Matrix2.identity);
+  });
+
+  it('should transpose the Matrix2 instance', () => {
+    const values: Array4 = [
+      1, 2,
+      3, 4
+    ];
+    const expectedValues: Array4 = [
+      1, 3,
+      2, 4
+    ];
+    const matrix = new Matrix2(values);
+    matrix.transpose();
+    expect(matrix.values).toEqual(expectedValues);
+  });
+});
+
+describe('Matrix3', () => {
+  it('should create a Matrix3 instance', () => {
+    const matrix = new Matrix3();
+    expect(matrix).toBeInstanceOf(Matrix3);
+  });
+
+  it('should create a Matrix3 instance with specified values', () => {
+    const values: Array9 = [
+      1, 2, 3,
+      4, 5, 6,
+      7, 8, 9
+    ];
+    const matrix = new Matrix3(values);
+    expect(matrix.values).toEqual(values);
+  });
+
+  it('should create a Matrix3 instance with identity values if no values are specified', () => {
+    const matrix = new Matrix3();
+    expect(matrix.values).toEqual(Matrix3.identity);
+  });
+
+  it('should transpose the Matrix3 instance', () => {
+    const values: Array9 = [
+      1, 2, 3,
+      4, 5, 6,
+      7, 8, 9
+    ];
+    const expectedValues: Array9 = [
+      1, 4, 7,
+      2, 5, 8,
+      3, 6, 9
+    ];
+    const matrix = new Matrix3(values);
+    matrix.transpose();
+    expect(matrix.values).toEqual(expectedValues);
+  });
+});
+
+describe('Matrix4', () => {
+  it('should create a Matrix4 instance', () => {
+    const matrix = new Matrix4();
+    expect(matrix).toBeInstanceOf(Matrix4);
+  });
+
+  it('should create a Matrix4 instance with specified values', () => {
+    const values: Array16 = [
+      1, 2, 3, 4,
+      5, 6, 7, 8,
+      9, 10, 11, 12,
+      13, 14, 15, 16
+    ];
+    const matrix = new Matrix4(values);
+    expect(matrix.values).toEqual(values);
+  });
+
+  it('should create a Matrix4 instance with identity values if no values are specified', () => {
+    const matrix = new Matrix4();
+    expect(matrix.values).toEqual(Matrix4.identity);
+  });
+
+  it('should transpose the Matrix4 instance', () => {
+    const values: Array16 = [
+      1, 2, 3, 4,
+      5, 6, 7, 8,
+      9, 10, 11, 12,
+      13, 14, 15, 16
+    ];
+    const expectedValues: Array16 = [
+      1, 5, 9, 13,
+      2, 6, 10, 14,
+      3, 7, 11, 15,
+      4, 8, 12, 16
+    ];
+    const matrix = new Matrix4(values);
+    matrix.transpose();
+    expect(matrix.values).toEqual(expectedValues);
+  });
+
+});
