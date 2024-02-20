@@ -15,11 +15,11 @@ export abstract class Matrix<T extends MatrixValues> {
 
   protected abstract create(values?: T): T;
 
-  protected abstract translate(...args: any): Matrix<T>;
+  public abstract translate(...args: any): Matrix<T>;
 
-  protected abstract scale(...args: any): Matrix<T>;
+  public abstract scale(...args: any): Matrix<T>;
 
-  protected abstract invert(): Matrix<T>;
+  public abstract invert(): Matrix<T>;
 
   transpose(): Matrix<T> {
     const dimension = Math.sqrt(this._values.length);

@@ -89,7 +89,7 @@ export class Attribute {
   }
 
   // TODO: this should be dynamic i guess
-  setBufferData(data: ArrayBuffer ) {
+  setBufferData(data: BufferSource ) {
 
     if(this._createVao) {
       // Create a vertex array object (attribute state)
