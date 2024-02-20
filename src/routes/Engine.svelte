@@ -9,8 +9,8 @@
   import { Attribute } from '../engine/Attribute';
   import { Uniform } from '../engine/Uniform';
   import { F, FColor, FNormals } from '../engine/shapes/3d/Chars';
-  import { degreesToRadians, m4 } from '../engine/util/Math';
-  import { Vector3 } from '../engine/models/math/Vector';
+  import { degreesToRadians } from '../engine/util/Math';
+  import { Vector3, Vector4 } from '../engine/models/math/Vector';
   import { Matrix4 } from '../engine/models/math/Matrix';
 
   let canvas: HTMLCanvasElement;
@@ -134,18 +134,19 @@
     });
 
     // flip F geometry
-    var fMatrix = m4.xRotation(Math.PI);
-    fMatrix = m4.translate(fMatrix, -50, -75, -15);
+    var fMatrix = Matrix4.translation(-50, -75, -15);
+    fMatrix = fMatrix.rotateX(Math.PI);
     for (var ii = 0; ii < F.length; ii += 3) {
-      var vector = m4.transformVector(fMatrix, [
+      var vector = fMatrix.transformVector(new Vector4([
         F[ii + 0],
         F[ii + 1],
         F[ii + 2],
         1,
-      ]);
-      F[ii + 0] = vector[0];
-      F[ii + 1] = vector[1];
-      F[ii + 2] = vector[2];
+      ])
+      );
+      F[ii + 0] = vector.values[0];
+      F[ii + 1] = vector.values[1];
+      F[ii + 2] = vector.values[2];
     }
     positionAttribute.setBufferData(F);
 
@@ -229,7 +230,7 @@
       type: 'matrix4fv',
       name: 'u_worldInverseTranspose',
       program,
-      value: m4.transpose(m4.inverse(Matrix4.identity)),
+      value: new Matrix4().transpose().invert().values,
     });
 
     worldViewUniform = new Uniform({
@@ -237,7 +238,7 @@
       type: 'matrix4fv',
       name: 'u_worldViewProjection',
       program,
-      value: m4.identity,
+      value: Matrix4.identity,
     });
 
     draw();
@@ -272,7 +273,7 @@
     const fieldOfViewRadians = degreesToRadians(60);
 
     // Compute the matrix
-    const projectionMatrix = m4.perspective(
+    const projectionMatrix = Matrix4.perspective(
       fieldOfViewRadians,
       aspect,
       zNear,
@@ -282,34 +283,34 @@
     const cameraPosition = new Vector3([0, 0, 400]);
 
     // Draw a F at the origin with rotation
-    let worldMatrix = m4.yRotate(m4.identity, degreesToRadians(rotationY));
-    worldMatrix = m4.xRotate(worldMatrix, degreesToRadians(rotationX));
-    worldMatrix = m4.zRotate(worldMatrix, degreesToRadians(rotationZ));
-    worldMatrix = m4.translate(
-      worldMatrix,
-      translationX,
-      translationY,
-      translationZ,
-    );
+    let worldMatrix = new Matrix4();
+    worldMatrix = worldMatrix
+      .rotateY(degreesToRadians(rotationY))
+      .rotateX(degreesToRadians(rotationX))
+      .rotateZ(degreesToRadians(rotationZ))
+      .translate(translationX, translationY, translationZ);
 
-    const fPosition = new Vector3([worldMatrix[12], worldMatrix[13], worldMatrix[14]]);
-    const cameraMatrix = m4.lookAt(cameraPosition, fPosition);
+    const fPosition = new Vector3([
+      worldMatrix.values[12],
+      worldMatrix.values[13],
+      worldMatrix.values[14]
+    ]);
+    const cameraMatrix = Matrix4.lookAt(cameraPosition, fPosition);
 
     // Make a view matrix from the camera matrix.
-    const viewMatrix = m4.inverse(cameraMatrix);
+    const viewMatrix = cameraMatrix.invert();
 
-    // move the projection space to view space (the space in front of
-    // the camera)
-    let viewProjectionMatrix = m4.multiply(projectionMatrix, viewMatrix);
+    // move the projection space to view space (the space in front of the camera)
+    let viewProjectionMatrix = Matrix4.multiply(viewMatrix, projectionMatrix);
 
-    const worldViewProjectionMatrix = m4.multiply(
-      viewProjectionMatrix,
+    const worldViewProjectionMatrix = Matrix4.multiply(
       worldMatrix,
+      viewProjectionMatrix,
     );
 
     // Set the matrix.
-    worldInverseTranspose.value = worldMatrix;
-    worldViewUniform.value = worldViewProjectionMatrix;
+    worldInverseTranspose.value = worldMatrix.values;
+    worldViewUniform.value = worldViewProjectionMatrix.values;
 
     // TODO: Move to Mesh class? mesh.draw();
     // Draw the geometry.

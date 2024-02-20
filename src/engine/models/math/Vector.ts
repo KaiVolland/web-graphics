@@ -6,6 +6,12 @@ export type VectorValues = Vector1D | Vector2D | Vector3D | Vector4D;
 
 export abstract class Vector<T extends VectorValues> {
 
+    constructor(values: T) {
+        this._values = this.create(values);
+    }
+
+    protected _values: T;
+
     // TODO: the typing is ok but the code could be smarter
     static substract<T extends VectorValues>(v1: Vector<T>, v2: Vector<T>): Vector<T> {
         if (v1.is1D(v1) && v2.is1D(v2)) {
@@ -26,12 +32,6 @@ export abstract class Vector<T extends VectorValues> {
     static dot<T extends VectorValues>(v1: Vector<T>, v2: Vector<T>): number {
         return v1._values.reduce((sum, val, i) => sum + val * v2._values[i], 0);
     }
-
-    constructor(values: T) {
-        this._values = this.create(values);
-    }
-
-    protected _values: T;
 
     get values(): T {
         return this._values;

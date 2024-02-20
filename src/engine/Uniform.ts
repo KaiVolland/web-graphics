@@ -11,7 +11,7 @@ export type UniformParams = {
   program?: Program;
   type: WebGLType;
   // TODO: determine by type
-  value?: number | number[];
+  value?: number | number[]; // this can also be of type Vector<VectorValues> ...
 };
 
 export class Uniform {
