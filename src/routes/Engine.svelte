@@ -5,13 +5,15 @@
   import { Engine } from '../engine/Engine';
   import { VertexShader } from '../engine/shader/VertexShader';
   import { FragmentShader } from '../engine/shader/FragmentShader';
-  import { Program } from '../engine/Program';
-  import { Attribute } from '../engine/Attribute';
-  import { Uniform } from '../engine/Uniform';
+  import { Program } from '../engine/models/webgl/Program';
+  import { Attribute } from '../engine/models/webgl/Attribute';
+  import { Uniform } from '../engine/models/webgl/Uniform';
   import { F, FColor, FNormals } from '../engine/shapes/3d/Chars';
   import { degreesToRadians } from '../engine/util/Math';
   import { Vector3, Vector4 } from '../engine/models/math/Vector';
   import { Matrix4 } from '../engine/models/math/Matrix';
+    import { Mesh } from '../engine/models/mesh/Mesh';
+    import { Cube, CubeColors, CubeNormals } from '../engine/shapes/3d/Primitives';
 
   let canvas: HTMLCanvasElement;
   let translationX: number = 0;
@@ -24,6 +26,8 @@
   let scaleY: number = 1;
   let scaleZ: number = 1;
   let gl: WebGL2RenderingContext;
+  let meshes: Mesh[] = [];
+
   let lightWorldPosition: Uniform;
   let viewWorldPosition: Uniform;
   let shininess: Uniform;
@@ -105,6 +109,7 @@
     canvas.addEventListener('touchmove', onMouseMove);
 
     gl = engine.gl;
+
     program = new Program(gl);
     const vertexShader = new VertexShader({
       gl,
@@ -121,18 +126,6 @@
     // Tell it to use our program (pair of shaders)
     gl.useProgram(program.webGLProgram);
 
-    // TODO: Move to Mesh class? mesh.draw();
-    positionAttribute = new Attribute({
-      gl,
-      name: 'a_position',
-      program,
-      createVao: true,
-      pointerProperties: {
-        size: 3,
-        type: gl.FLOAT,
-      },
-    });
-
     // flip F geometry
     var fMatrix = Matrix4.translation(-50, -75, -15);
     fMatrix = fMatrix.rotateX(Math.PI);
@@ -148,41 +141,31 @@
       F[ii + 1] = vector.values[1];
       F[ii + 2] = vector.values[2];
     }
-    positionAttribute.setBufferData(F);
 
-    // // TODO: Move to Mesh class? mesh.draw();
-    colorAttribute = new Attribute({
+    const fMesh = new Mesh({
       gl,
-      name: 'a_color',
       program,
-      pointerProperties: {
-        size: 3,
-        normalize: true,
-        type: gl.UNSIGNED_BYTE,
-      },
+      coordinates: F,
+      normals: FNormals,
+      colors: FColor,
     });
-    colorAttribute.setBufferData(FColor);
+    meshes.push(fMesh);
 
-    normalsAttribute = new Attribute({
-      gl,
-      name: 'a_normal',
-      program,
-      pointerProperties: {
-        size: 3,
-        type: gl.FLOAT,
-      },
-    });
-    normalsAttribute.setBufferData(FNormals);
-
-    // Bind the attribute/buffer set we want.
-    gl.bindVertexArray(positionAttribute.vao);
+    // const cube = new Mesh({
+    //   gl,
+    //   program,
+    //   coordinates: Cube,
+    //   normals: CubeNormals,
+    //   colors: CubeColors,
+    // });
+    // meshes.push(cube);
 
     lightColor = new Uniform({
       gl,
       type: '3fv',
       name: 'u_lightColor',
       program,
-      value: new Vector3([1, 0.6, 0.6]).normalize().values
+      value: new Vector3([1, 0.6, 0.6]).normalize()
     });
 
     specularColor = new Uniform({
@@ -190,7 +173,7 @@
       type: '3fv',
       name: 'u_specularColor',
       program,
-      value: new Vector3([1, 0.2, 0.2]).normalize().values
+      value: new Vector3([1, 0.2, 0.2]).normalize()
     });
 
     shininess = new Uniform({
@@ -206,7 +189,7 @@
       type: '3fv',
       name: 'u_viewWorldPosition',
       program,
-      value: new Vector3([0, 0, 400]).values,
+      value: new Vector3([0, 0, 400]),
     });
 
     lightWorldPosition = new Uniform({
@@ -214,7 +197,7 @@
       type: '3fv',
       name: 'u_lightWorldPosition',
       program,
-      value: new Vector3([20, 30, 50]).values,
+      value: new Vector3([200, 30, 50]),
     });
 
     world = new Uniform({
@@ -230,7 +213,7 @@
       type: 'matrix4fv',
       name: 'u_worldInverseTranspose',
       program,
-      value: new Matrix4().transpose().invert().values,
+      value: new Matrix4().transpose().invert(),
     });
 
     worldViewUniform = new Uniform({
@@ -312,16 +295,8 @@
     worldInverseTranspose.value = worldMatrix.values;
     worldViewUniform.value = worldViewProjectionMatrix.values;
 
-    // TODO: Move to Mesh class? mesh.draw();
-    // Draw the geometry.
-    positionAttribute.setBufferData(F);
-    normalsAttribute.setBufferData(FNormals);
-    colorAttribute.setBufferData(FColor);
-
-    const primitiveType = gl.TRIANGLES;
-    const offset = 0;
-    const count = F.length / 3;
-    gl.drawArrays(primitiveType, offset, count);
+    // Draw the meshes
+    meshes.forEach(mesh => mesh.draw());
 
     requestAnimationFrame(draw);
   }

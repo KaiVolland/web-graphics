@@ -1,3 +1,5 @@
+import { Matrix, type MatrixValues } from "../math/Matrix";
+import { Vector, type VectorValues } from "../math/Vector";
 import type { Program } from "./Program";
 
 type Dimensions = '1' | '2' | '3' | '4';
@@ -10,8 +12,7 @@ export type UniformParams = {
   name: string;
   program?: Program;
   type: WebGLType;
-  // TODO: determine by type
-  value?: number | number[]; // this can also be of type Vector<VectorValues> ...
+  value?: Vector<VectorValues> | Matrix<MatrixValues> | number | number[];
 };
 
 export class Uniform {
@@ -36,7 +37,11 @@ export class Uniform {
     // TODO: Find out why this is happening
     console.log(`Creating uniform ${name} with type ${type} and value ${value}`);
     if (value !== undefined) {
-      this.value = value;
+      if (value instanceof Matrix || value instanceof Vector) {
+        this.value = value.values;
+      } else {
+        this.value = value;
+      }
     }
   }
 
@@ -44,8 +49,12 @@ export class Uniform {
     return this._value;
   }
 
-  set value(value: number | number[] | null) {
-    this._value = value;
+  set value(value: Vector<VectorValues> | Matrix<MatrixValues> | number | number[] | null) {
+    if (value instanceof Matrix || value instanceof Vector) {
+      this._value = value.values;
+    } else {
+      this._value = value;
+    }
     const location = this.getLocation();
 
     if (!Array.isArray(value)) {

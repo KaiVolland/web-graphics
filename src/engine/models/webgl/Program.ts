@@ -1,6 +1,6 @@
-import type { BaseShader } from "./shader/BaseShader";
-import { FragmentShader } from "./shader/FragmentShader";
-import { VertexShader } from "./shader/VertexShader";
+import type { BaseShader } from "../../shader/BaseShader";
+import { FragmentShader } from "../../shader/FragmentShader";
+import { VertexShader } from "../../shader/VertexShader";
 
 export type BaseProgramParams = WebGL2RenderingContext;
 
