@@ -1,9 +1,8 @@
-import type { Program } from "./Program";
+import type { Program } from "./models/webgl/Program";
 
 export type PeterConstructorParams = HTMLCanvasElement;
 
-// TODO: This class should be renamed
-export class Engine {
+export class Scene {
 
   private _gl: WebGL2RenderingContext | null = null;
 
