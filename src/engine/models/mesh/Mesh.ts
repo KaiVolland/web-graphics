@@ -1,13 +1,12 @@
-import type { Vector3 } from "../math/Vector";
 import { Attribute } from "../webgl/Attribute";
 import type { Program } from "../webgl/Program";
+import type { Texture } from "../webgl/Texture";
 
 export type MeshParams = {
   program: Program;
   gl: WebGL2RenderingContext;
   coordinates?: Float32Array;
-  // textures?: Float32Array; // TODO: should replace colors
-  colors?: Uint8Array;
+  texture?: Texture;
   normals?: Float32Array;
 };
 
@@ -16,8 +15,7 @@ export class Mesh {
   constructor({
     coordinates,
     normals,
-    // textures,
-    colors,
+    texture,
     gl,
     program
   }: MeshParams) {
@@ -50,18 +48,8 @@ export class Mesh {
     if (normals) {
       this._normalsAttribute.setBufferData(normals);
     }
-    this._colorAttribute = new Attribute({
-      gl,
-      name: 'a_color',
-      program,
-      pointerProperties: {
-        size: 3,
-        normalize: true,
-        type: gl.UNSIGNED_BYTE,
-      },
-    });
-    if (colors) {
-      this._colorAttribute.setBufferData(colors);
+    if (texture) {
+      this._texture = texture;
     }
   }
 
@@ -73,9 +61,7 @@ export class Mesh {
 
   private _normalsAttribute?: Attribute;
 
-  private _textureAttribute?: Attribute;
-
-  private _colorAttribute?: Attribute;
+  private _texture?: Texture;
 
   public draw() {
     if (!this._positionAttribute) {
@@ -88,6 +74,9 @@ export class Mesh {
        // TODO: This value needs to be calculated
       const count = 96;
       this._gl.drawArrays(primitiveType, offset, count);
+      if (this._texture) {
+        this._texture.draw();
+      }
     }
   }
 

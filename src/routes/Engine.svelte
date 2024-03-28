@@ -2,18 +2,19 @@
   import vertexShaderSource from '../engine/shader/vert';
   import fragmentShaderSource from '../engine/shader/frag';
   import { onMount } from 'svelte';
-  import { Engine } from '../engine/Engine';
+  import { Scene } from '../engine/Scene';
   import { VertexShader } from '../engine/shader/VertexShader';
   import { FragmentShader } from '../engine/shader/FragmentShader';
   import { Program } from '../engine/models/webgl/Program';
   import { Attribute } from '../engine/models/webgl/Attribute';
   import { Uniform } from '../engine/models/webgl/Uniform';
-  import { F, FColor, FNormals } from '../engine/shapes/3d/Chars';
+  import { F, FColor, FNormals, FTexture } from '../engine/shapes/3d/Chars';
   import { degreesToRadians } from '../engine/util/Math';
   import { Vector3, Vector4 } from '../engine/models/math/Vector';
   import { Matrix4 } from '../engine/models/math/Matrix';
-    import { Mesh } from '../engine/models/mesh/Mesh';
-    import { Cube, CubeColors, CubeNormals } from '../engine/shapes/3d/Primitives';
+  import { Mesh } from '../engine/models/mesh/Mesh';
+  import { Cube, CubeColors, CubeNormals } from '../engine/shapes/3d/Primitives';
+    import { Texture } from '../engine/models/webgl/Texture';
 
   let canvas: HTMLCanvasElement;
   let translationX: number = 0;
@@ -37,9 +38,6 @@
   let world: Uniform;
   let worldInverseTranspose: Uniform;
   let worldViewUniform: Uniform;
-  let positionAttribute: Attribute;
-  let colorAttribute: Attribute;
-  let normalsAttribute: Attribute;
   let program: Program;
 
   let mouseRotateActive = false;
@@ -95,7 +93,7 @@
   };
 
   onMount(() => {
-    const engine = new Engine(canvas);
+    const engine = new Scene(canvas);
     if (!engine.gl) {
       throw 'Could not get gl from Engine.';
     }
@@ -142,30 +140,28 @@
       F[ii + 2] = vector.values[2];
     }
 
+    const fTexture = new Texture({
+      gl,
+      program,
+      coordinates: FTexture,
+      src: '/static/f-texture.png'
+    });
+
     const fMesh = new Mesh({
       gl,
       program,
       coordinates: F,
       normals: FNormals,
-      colors: FColor,
+      texture: fTexture
     });
     meshes.push(fMesh);
-
-    // const cube = new Mesh({
-    //   gl,
-    //   program,
-    //   coordinates: Cube,
-    //   normals: CubeNormals,
-    //   colors: CubeColors,
-    // });
-    // meshes.push(cube);
 
     lightColor = new Uniform({
       gl,
       type: '3fv',
       name: 'u_lightColor',
       program,
-      value: new Vector3([1, 0.6, 0.6]).normalize()
+      value: new Vector3([1, 1, 1]).normalize()
     });
 
     specularColor = new Uniform({
@@ -197,7 +193,7 @@
       type: '3fv',
       name: 'u_lightWorldPosition',
       program,
-      value: new Vector3([200, 30, 50]),
+      value: new Vector3([0, 20, 100]),
     });
 
     world = new Uniform({
