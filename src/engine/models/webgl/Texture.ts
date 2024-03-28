@@ -104,6 +104,10 @@ export class Texture {
     });
   };
 
+  bind() {
+    this._gl.bindTexture(this._gl.TEXTURE_2D, this._webGlTexture);
+  }
+
   draw() {
     if (this._coordinates && this._coordinatesAttribute) {
       this._coordinatesAttribute.setBufferData(this._coordinates);

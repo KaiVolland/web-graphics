@@ -144,7 +144,6 @@
       coordinates: FTexture,
       src: './static/f-texture.png'
     });
-
     const fMesh = new Mesh({
       gl,
       program,
@@ -153,6 +152,35 @@
       texture: fTexture
     });
     meshes.push(fMesh);
+
+    const floorTexture = new Texture({
+      gl,
+      program,
+      coordinates: new Float32Array([
+        0, 0,
+        6, 0,
+        6, 6,
+        0, 0,
+        6, 6,
+        0, 6
+      ]),
+      src: './static/floor.jpeg'
+    });
+    const floor = new Mesh({
+      gl,
+      program,
+      coordinates: new Float32Array([
+        -1000, -100, 1000,
+        1000, -100, 1000,
+        1000, -100, -1000,
+        -1000, -100, 1000,
+        1000, -100, -1000,
+        -1000, -100, -1000
+      ]),
+      normals: FNormals,
+      texture: floorTexture
+    });
+    meshes.push(floor);
 
     lightColor = new Uniform({
       gl,

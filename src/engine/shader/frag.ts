@@ -18,7 +18,7 @@ uniform vec3 u_lightColor;
 uniform vec3 u_specularColor;
 
 void main() {
-  outColor = texture(u_texture, v_texcoord);;
+  outColor = texture(u_texture, v_texcoord);
 
   // because v_normal is a varying it's interpolated
   // so it will not be a unit vector. Normalizing it

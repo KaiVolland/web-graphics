@@ -68,12 +68,16 @@ export class Mesh {
       console.log('No position attribute');
       return;
     } else {
+      if (this._texture) {
+        this._texture.bind()
+      }
       this._gl.bindVertexArray(this._positionAttribute.vao);
       const primitiveType = this._gl.TRIANGLES;
       const offset = 0;
        // TODO: This value needs to be calculated
       const count = 96;
       this._gl.drawArrays(primitiveType, offset, count);
+
       if (this._texture) {
         this._texture.draw();
       }

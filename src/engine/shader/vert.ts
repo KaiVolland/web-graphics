@@ -13,8 +13,6 @@ uniform mat4 u_world;
 uniform mat4 u_worldViewProjection;
 uniform mat4 u_worldInverseTranspose;
 
-// // a varying the color to the fragment shader
-
 // a varying to pass the texture coordinates to the fragment shader
 out vec2 v_texcoord;
 
