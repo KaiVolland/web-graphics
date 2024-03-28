@@ -6,15 +6,13 @@
   import { VertexShader } from '../engine/shader/VertexShader';
   import { FragmentShader } from '../engine/shader/FragmentShader';
   import { Program } from '../engine/models/webgl/Program';
-  import { Attribute } from '../engine/models/webgl/Attribute';
   import { Uniform } from '../engine/models/webgl/Uniform';
-  import { F, FColor, FNormals, FTexture } from '../engine/shapes/3d/Chars';
+  import { F, FNormals, FTexture } from '../engine/shapes/3d/Chars';
   import { degreesToRadians } from '../engine/util/Math';
   import { Vector3, Vector4 } from '../engine/models/math/Vector';
   import { Matrix4 } from '../engine/models/math/Matrix';
   import { Mesh } from '../engine/models/mesh/Mesh';
-  import { Cube, CubeColors, CubeNormals } from '../engine/shapes/3d/Primitives';
-    import { Texture } from '../engine/models/webgl/Texture';
+  import { Texture } from '../engine/models/webgl/Texture';
 
   let canvas: HTMLCanvasElement;
   let translationX: number = 0;
@@ -144,7 +142,7 @@
       gl,
       program,
       coordinates: FTexture,
-      src: '/static/f-texture.png'
+      src: './static/f-texture.png'
     });
 
     const fMesh = new Mesh({
