@@ -15,15 +15,15 @@
   import { Texture } from '../engine/models/webgl/Texture';
 
   let canvas: HTMLCanvasElement;
-  let translationX: number = 0;
-  let translationY: number = 0;
-  let translationZ: number = 0;
+  let worldTranslationX: number = 0;
+  let worldTranslationY: number = 0;
+  let worldTranslationZ: number = 0;
+  let cameraTranslationX: number = 0;
+  let cameraTranslationY: number = 0;
+  let cameraTranslationZ: number = 400;
   let rotationX: number = 0;
   let rotationY: number = 0;
   let rotationZ: number = 0;
-  let scaleX: number = 1;
-  let scaleY: number = 1;
-  let scaleZ: number = 1;
   let gl: WebGL2RenderingContext;
   let meshes: Mesh[] = [];
 
@@ -43,21 +43,19 @@
   let mouseAction = 'rotate';
   let mouseRotateStartRotate = [0, 0, 0];
   let mouseRotateStartTranslate = [0, 0, 0];
-  let mouseRotateStartScale = [0, 0, 0];
 
   const onMouseDown = (event: MouseEvent | TouchEvent) => {
     const isTouch = event instanceof TouchEvent;
     mouseRotateActive = true;
     if (!isTouch) {
-      mouseAction = event.button === 0 ? 'rotate' : 'scale';
+      mouseAction = 'rotate';
       mouseRotateStartPosition = [event.clientX, event.clientY];
     } else {
       mouseAction = 'rotate';
       mouseRotateStartPosition = [event.touches[0].clientX, event.touches[0].clientY];
     }
     mouseRotateStartRotate = [rotationX, rotationY, rotationZ];
-    mouseRotateStartTranslate = [translationX, translationY, translationZ];
-    mouseRotateStartScale = [scaleX, scaleY, scaleZ];
+    mouseRotateStartTranslate = [worldTranslationX, worldTranslationY, worldTranslationZ];
   };
 
   const onMouseUp = () => {
@@ -81,12 +79,17 @@
       rotationX = mouseRotateStartRotate[0] - deltaY;
       rotationY = mouseRotateStartRotate[1] - deltaX;
     }
-    // right mouse button
-    if (mouseAction === 'scale') {
-      const factor = canvas.clientHeight / 4;
-      scaleX = mouseRotateStartScale[0] + deltaY / factor;
-      scaleY = mouseRotateStartScale[1] + deltaY / factor;
-      scaleZ = mouseRotateStartScale[2] + deltaY / factor;
+  };
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'w') {
+      cameraTranslationZ -= 10;
+    } else if (event.key === 's') {
+      cameraTranslationZ += 10;
+    } else if (event.key === 'a') {
+      cameraTranslationX -= 10;
+    } else if (event.key === 'd') {
+      cameraTranslationX += 10;
     }
   };
 
@@ -103,6 +106,7 @@
     canvas.addEventListener('touchend', onMouseUp);
     canvas.addEventListener('mousemove', onMouseMove);
     canvas.addEventListener('touchmove', onMouseMove);
+    document.addEventListener('keydown', onKeyDown);
 
     gl = engine.gl;
 
@@ -285,15 +289,14 @@
       zFar,
     );
 
-    const cameraPosition = new Vector3([0, 0, 400]);
+    const cameraPosition = new Vector3([cameraTranslationX, cameraTranslationY, cameraTranslationZ]);
 
-    // Draw a F at the origin with rotation
     let worldMatrix = new Matrix4();
     worldMatrix = worldMatrix
       .rotateY(degreesToRadians(rotationY))
       .rotateX(degreesToRadians(rotationX))
       .rotateZ(degreesToRadians(rotationZ))
-      .translate(translationX, translationY, translationZ);
+      .translate(worldTranslationX, worldTranslationY, worldTranslationZ);
 
     const fPosition = new Vector3([
       worldMatrix.values[12],
@@ -334,32 +337,15 @@
       </span>
       <span class="field">
         <span class="label">x</span>
-        <input type="number" bind:value={translationX} />
+        <input type="number" bind:value={worldTranslationX} />
       </span>
       <span class="field">
         <span class="label">y</span>
-        <input type="number" bind:value={translationY} min={-1000} max={1000} />
+        <input type="number" bind:value={worldTranslationY} min={-1000} max={1000} />
       </span>
       <span class="field">
         <span class="label">z</span>
-        <input type="number" bind:value={translationZ} min={-1000} max={1000} />
-      </span>
-    </div>
-    <div class="control">
-      <span class="field">
-        <span class="label">Scale:</span>
-      </span>
-      <span class="field">
-        <span class="label">x</span>
-        <input type="number" bind:value={scaleX} min={0.1} max={3} step={0.1} />
-      </span>
-      <span class="field">
-        <span class="label">y</span>
-        <input type="number" bind:value={scaleY} min={0.1} max={3} step={0.1} />
-      </span>
-      <span class="field">
-        <span class="label">z</span>
-        <input type="number" bind:value={scaleZ} min={0.1} max={3} step={0.1} />
+        <input type="number" bind:value={worldTranslationZ} min={-1000} max={1000} />
       </span>
     </div>
     <div class="control">
