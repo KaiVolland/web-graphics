@@ -1,3 +1,5 @@
+import type { Matrix4 } from "../math/Matrix";
+import { Vector4, type Vector4D } from "../math/Vector";
 import { Attribute } from "../webgl/Attribute";
 import type { Program } from "../webgl/Program";
 import type { Texture } from "../webgl/Texture";
@@ -12,6 +14,18 @@ export type MeshParams = {
 
 export class Mesh {
 
+  private _gl: WebGL2RenderingContext;
+
+  private _positionAttribute?: Attribute;
+
+  private _normalsAttribute?: Attribute;
+
+  private _texture?: Texture;
+
+  private _coordinates?: Float32Array;
+
+  private _normals?: Float32Array;
+
   constructor({
     coordinates,
     normals,
@@ -20,8 +34,11 @@ export class Mesh {
     program
   }: MeshParams) {
 
+    this._coordinates = coordinates;
+
+    this._normals = normals;
+
     this._gl = gl;
-    this._program = program;
 
     this._positionAttribute = new Attribute({
       gl,
@@ -53,34 +70,70 @@ export class Mesh {
     }
   }
 
-  private _gl: WebGL2RenderingContext;
+  get coordinates(): Float32Array | undefined {
+    return this._coordinates;
+  }
 
-  private _program: Program;
+  public transform(matrix: Matrix4) {
+    if (!this._coordinates || !this._positionAttribute) {
+      return;
+    }
+    const size = this._positionAttribute.getPointerProperties().size;
+    for (var i = 0; i < this._coordinates.length; i += size) {
+      var vector = matrix.transformVector(new Vector4([
+        this._coordinates[i + 0],
+        this._coordinates[i + 1],
+        this._coordinates[i + 2],
+        1,
+      ])
+      );
+      this._coordinates[i + 0] = vector.values[0];
+      this._coordinates[i + 1] = vector.values[1];
+      this._coordinates[i + 2] = vector.values[2];
+    }
+    this._positionAttribute.setBufferData(this._coordinates);
 
-  private _positionAttribute?: Attribute;
-
-  private _normalsAttribute?: Attribute;
-
-  private _texture?: Texture;
+    if (!this._normals || !this._normalsAttribute) {
+      return;
+    }
+    const normalsSize = this._positionAttribute.getPointerProperties().size;
+    for (var i = 0; i < this._normals.length; i += normalsSize) {
+      var vector = matrix.transformVector(new Vector4([
+        this._normals[i + 0],
+        this._normals[i + 1],
+        this._normals[i + 2],
+        1,
+      ])
+      );
+      this._normals[i + 0] = vector.values[0];
+      this._normals[i + 1] = vector.values[1];
+      this._normals[i + 2] = vector.values[2];
+    }
+    this._normalsAttribute.setBufferData(this._normals);
+  }
 
   public draw() {
     if (!this._positionAttribute) {
       console.log('No position attribute');
       return;
-    } else {
-      if (this._texture) {
-        this._texture.bind()
-      }
-      this._gl.bindVertexArray(this._positionAttribute.vao);
-      const primitiveType = this._gl.TRIANGLES;
-      const offset = 0;
-       // TODO: This value needs to be calculated
-      const count = 96;
-      this._gl.drawArrays(primitiveType, offset, count);
+    }
+    if (!this._coordinates) {
+      console.log('No coordinates passed');
+      return;
+    }
 
-      if (this._texture) {
-        this._texture.draw();
-      }
+    if (this._texture) {
+      this._texture.bind()
+    }
+    this._gl.bindVertexArray(this._positionAttribute.vao);
+    const primitiveType = this._gl.TRIANGLES;
+    const offset = 0;
+
+    const count = this._coordinates.length / this._positionAttribute.getPointerProperties().size;
+    this._gl.drawArrays(primitiveType, offset, count);
+
+    if (this._texture) {
+      this._texture.draw();
     }
   }
 

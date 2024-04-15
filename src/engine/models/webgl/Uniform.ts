@@ -33,9 +33,6 @@ export class Uniform {
     if (program) {
       this._program = program;
     }
-    // TODO: This console.log delays the code so it runs properly
-    // TODO: Find out why this is happening
-    console.log(`Creating uniform ${name} with type ${type} and value ${value}`);
     if (value !== undefined) {
       if (value instanceof Matrix || value instanceof Vector) {
         this.value = value.values;

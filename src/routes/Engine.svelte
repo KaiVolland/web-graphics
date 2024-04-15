@@ -13,13 +13,14 @@
   import { Matrix4 } from '../engine/models/math/Matrix';
   import { Mesh } from '../engine/models/mesh/Mesh';
   import { Texture } from '../engine/models/webgl/Texture';
+    import { Cube, CubeNormals } from '../engine/shapes/3d/Primitives';
 
   let canvas: HTMLCanvasElement;
   let worldTranslationX: number = 0;
   let worldTranslationY: number = 0;
   let worldTranslationZ: number = 0;
   let cameraTranslationX: number = 0;
-  let cameraTranslationY: number = 0;
+  let cameraTranslationY: number = 100;
   let cameraTranslationZ: number = 400;
   let rotationX: number = 0;
   let rotationY: number = 0;
@@ -126,21 +127,8 @@
     // Tell it to use our program (pair of shaders)
     gl.useProgram(program.webGLProgram);
 
-    // flip F geometry
-    var fMatrix = Matrix4.translation(-50, -75, -15);
-    fMatrix = fMatrix.rotateX(Math.PI);
-    for (var ii = 0; ii < F.length; ii += 3) {
-      var vector = fMatrix.transformVector(new Vector4([
-        F[ii + 0],
-        F[ii + 1],
-        F[ii + 2],
-        1,
-      ])
-      );
-      F[ii + 0] = vector.values[0];
-      F[ii + 1] = vector.values[1];
-      F[ii + 2] = vector.values[2];
-    }
+    var fTransformation = Matrix4.translation(0,0,0);
+    fTransformation = fTransformation.rotateX(0);
 
     const fTexture = new Texture({
       gl,
@@ -155,7 +143,19 @@
       normals: FNormals,
       texture: fTexture
     });
+    fMesh.transform(fTransformation);
     meshes.push(fMesh);
+
+    var cubeTransformation = Matrix4.translation(0,0,0);
+    const cubeMesh = new Mesh({
+      gl,
+      program,
+      coordinates: Cube,
+      texture: fTexture,
+      normals: CubeNormals
+    });
+    cubeMesh.transform(cubeTransformation);
+    meshes.push(cubeMesh);
 
     const floorTexture = new Texture({
       gl,
@@ -174,12 +174,12 @@
       gl,
       program,
       coordinates: new Float32Array([
-        -1000, -100, 1000,
-        1000, -100, 1000,
-        1000, -100, -1000,
-        -1000, -100, 1000,
-        1000, -100, -1000,
-        -1000, -100, -1000
+        -1000, 0, 1000,
+        1000, 0, 1000,
+        1000, 0, -1000,
+        -1000, 0, 1000,
+        1000, 0, -1000,
+        -1000, 0, -1000
       ]),
       normals: FNormals,
       texture: floorTexture
@@ -215,7 +215,7 @@
       type: '3fv',
       name: 'u_viewWorldPosition',
       program,
-      value: new Vector3([0, 0, 400]),
+      value: new Vector3([0, 0, 0]),
     });
 
     lightWorldPosition = new Uniform({
@@ -223,7 +223,7 @@
       type: '3fv',
       name: 'u_lightWorldPosition',
       program,
-      value: new Vector3([0, 20, 100]),
+      value: new Vector3([0, 0, 0]),
     });
 
     world = new Uniform({
@@ -289,6 +289,8 @@
       zFar,
     );
 
+    const center = new Vector3([0,0,0]);
+
     const cameraPosition = new Vector3([cameraTranslationX, cameraTranslationY, cameraTranslationZ]);
 
     let worldMatrix = new Matrix4();
@@ -303,7 +305,7 @@
       worldMatrix.values[13],
       worldMatrix.values[14]
     ]);
-    const cameraMatrix = Matrix4.lookAt(cameraPosition, fPosition);
+    const cameraMatrix = Matrix4.lookAt(cameraPosition, center);
 
     // Make a view matrix from the camera matrix.
     const viewMatrix = cameraMatrix.invert();

@@ -118,9 +118,27 @@ export class Attribute {
       normalize,
       stride,
       offset
-    } =this._pointerProperties;
+    } = this._pointerProperties;
 
     // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
     this._gl.vertexAttribPointer(this.getLocation(), size, type, normalize, stride, offset);
+  }
+
+  getBufferData(): Float32Array {
+    // Binden des Buffer-Objekts
+    this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._buffer);
+
+    // Abrufen der Buffer-Daten
+    const bufferSize = this._gl.getBufferParameter(this._gl.ARRAY_BUFFER, this._gl.BUFFER_SIZE);
+    const data = new Float32Array(bufferSize / Float32Array.BYTES_PER_ELEMENT);
+
+    // Kopieren der Daten aus dem Buffer in das Float32Array
+    this._gl.getBufferSubData(this._gl.ARRAY_BUFFER, 0, data);
+
+    return data;
+  }
+
+  getPointerProperties() {
+    return this._pointerProperties;
   }
 }
