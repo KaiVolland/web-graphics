@@ -13,7 +13,9 @@
   import { Matrix4 } from '../engine/models/math/Matrix';
   import { Mesh } from '../engine/models/mesh/Mesh';
   import { Texture } from '../engine/models/webgl/Texture';
-    import { Cube, CubeNormals } from '../engine/shapes/3d/Primitives';
+  import { Cube, CubeNormals } from '../engine/shapes/3d/Primitives';
+  import { DirectionalLight } from '../engine/models/light/DirectionalLight';
+  import { LightManager } from '../engine/LightManager';
 
   let canvas: HTMLCanvasElement;
   let worldTranslationX: number = 0;
@@ -28,13 +30,6 @@
   let gl: WebGL2RenderingContext;
   let meshes: Mesh[] = [];
 
-  let lightWorldPosition: Uniform;
-  let viewWorldPosition: Uniform;
-  let shininess: Uniform;
-  let specularColor: Uniform;
-  let lightColor: Uniform;
-
-  let world: Uniform;
   let worldInverseTranspose: Uniform;
   let worldViewUniform: Uniform;
   let program: Program;
@@ -95,9 +90,9 @@
   };
 
   onMount(() => {
-    const engine = new Scene(canvas);
-    if (!engine.gl) {
-      throw 'Could not get gl from Engine.';
+    const scene = new Scene(canvas);
+    if (!scene.gl) {
+      throw 'Could not get gl from Scene.';
     }
 
     canvas.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -109,7 +104,7 @@
     canvas.addEventListener('touchmove', onMouseMove);
     document.addEventListener('keydown', onKeyDown);
 
-    gl = engine.gl;
+    gl = scene.gl;
 
     program = new Program(gl);
     const vertexShader = new VertexShader({
@@ -122,10 +117,12 @@
     });
     program.attachShader(vertexShader);
     program.attachShader(fragmentShader);
-    engine.linkProgram(program);
+    scene.linkProgram(program);
 
     // Tell it to use our program (pair of shaders)
     gl.useProgram(program.webGLProgram);
+
+    const lightManager = new LightManager({gl, program});
 
     var fTransformation = Matrix4.translation(0,0,0);
     fTransformation = fTransformation.rotateX(0);
@@ -186,54 +183,6 @@
     });
     meshes.push(floor);
 
-    lightColor = new Uniform({
-      gl,
-      type: '3fv',
-      name: 'u_lightColor',
-      program,
-      value: new Vector3([1, 1, 1]).normalize()
-    });
-
-    specularColor = new Uniform({
-      gl,
-      type: '3fv',
-      name: 'u_specularColor',
-      program,
-      value: new Vector3([1, 0.2, 0.2]).normalize()
-    });
-
-    shininess = new Uniform({
-      gl,
-      type: '1f',
-      name: 'u_shininess',
-      program,
-      value: 50,
-    });
-
-    viewWorldPosition = new Uniform({
-      gl,
-      type: '3fv',
-      name: 'u_viewWorldPosition',
-      program,
-      value: new Vector3([0, 0, 0]),
-    });
-
-    lightWorldPosition = new Uniform({
-      gl,
-      type: '3fv',
-      name: 'u_lightWorldPosition',
-      program,
-      value: new Vector3([0, 0, 0]),
-    });
-
-    world = new Uniform({
-      gl,
-      type: 'matrix4fv',
-      name: 'u_world',
-      program,
-      value: Matrix4.identity,
-    });
-
     worldInverseTranspose = new Uniform({
       gl,
       type: 'matrix4fv',
@@ -249,6 +198,12 @@
       program,
       value: Matrix4.identity,
     });
+
+    const basicLighting = new DirectionalLight({
+      direction: new Vector3([0, 0, 1]),
+      color: new Vector4([1, 1, 1, 1])
+    });
+    lightManager.addDirectionalLight(basicLighting);
 
     draw();
   });
@@ -300,11 +255,6 @@
       .rotateZ(degreesToRadians(rotationZ))
       .translate(worldTranslationX, worldTranslationY, worldTranslationZ);
 
-    const fPosition = new Vector3([
-      worldMatrix.values[12],
-      worldMatrix.values[13],
-      worldMatrix.values[14]
-    ]);
     const cameraMatrix = Matrix4.lookAt(cameraPosition, center);
 
     // Make a view matrix from the camera matrix.
