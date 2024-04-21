@@ -11,10 +11,13 @@ uniform mat4 u_worldInverseTranspose;
 
 out vec2 v_texcoord;
 out vec3 v_normal;
+out vec3 v_position;
 
 void main() {
   // Multiply the position by the matrix.
   gl_Position = u_worldViewProjection * a_position;
+
+  v_position = gl_Position.xyz;
 
   // Pass the texcoord to the fragment shader.
   v_texcoord = a_texcoord;

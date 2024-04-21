@@ -13,20 +13,16 @@
   import { Matrix4 } from '../engine/models/math/Matrix';
   import { Mesh } from '../engine/models/mesh/Mesh';
   import { Texture } from '../engine/models/webgl/Texture';
-  import { Cube, CubeNormals } from '../engine/shapes/3d/Primitives';
+  import { Cube, CubeNormals, CubeTexture } from '../engine/shapes/3d/Primitives';
   import { DirectionalLight } from '../engine/models/light/DirectionalLight';
   import { LightManager } from '../engine/LightManager';
+  import { PointLight } from '../engine/models/light/PointLight';
+
+  let stickToMesh = false;
 
   let canvas: HTMLCanvasElement;
-  let worldTranslationX: number = 0;
-  let worldTranslationY: number = 0;
-  let worldTranslationZ: number = 0;
-  let cameraTranslationX: number = 0;
-  let cameraTranslationY: number = 100;
-  let cameraTranslationZ: number = 400;
-  let rotationX: number = 0;
-  let rotationY: number = 0;
-  let rotationZ: number = 0;
+  let cameraPosition: Vector3 = new Vector3([0, 100, 400]);
+  let cameraRotation: Vector3 = new Vector3([0, 0, 0]);
   let gl: WebGL2RenderingContext;
   let meshes: Mesh[] = [];
 
@@ -39,6 +35,7 @@
   let mouseAction = 'rotate';
   let mouseRotateStartRotate = [0, 0, 0];
   let mouseRotateStartTranslate = [0, 0, 0];
+  let basicLighting: DirectionalLight;
 
   const onMouseDown = (event: MouseEvent | TouchEvent) => {
     const isTouch = event instanceof TouchEvent;
@@ -50,8 +47,8 @@
       mouseAction = 'rotate';
       mouseRotateStartPosition = [event.touches[0].clientX, event.touches[0].clientY];
     }
-    mouseRotateStartRotate = [rotationX, rotationY, rotationZ];
-    mouseRotateStartTranslate = [worldTranslationX, worldTranslationY, worldTranslationZ];
+    mouseRotateStartRotate = cameraRotation.values;
+    mouseRotateStartTranslate = cameraPosition.values;
   };
 
   const onMouseUp = () => {
@@ -72,20 +69,20 @@
     // mousewheel
     if (mouseAction === 'rotate') {
       // FIXME: The axis seem to be swichted here check rotation matrices
-      rotationX = mouseRotateStartRotate[0] - deltaY;
-      rotationY = mouseRotateStartRotate[1] - deltaX;
+      cameraRotation.values[0] = mouseRotateStartRotate[0] - deltaY;
+      cameraRotation.values[2] = mouseRotateStartRotate[1] - deltaX;
     }
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'w') {
-      cameraTranslationZ -= 10;
+      cameraPosition.values[2] -= 10;
     } else if (event.key === 's') {
-      cameraTranslationZ += 10;
+      cameraPosition.values[2] += 10;
     } else if (event.key === 'a') {
-      cameraTranslationX -= 10;
+      cameraPosition.values[0] -= 10;
     } else if (event.key === 'd') {
-      cameraTranslationX += 10;
+      cameraPosition.values[0] += 10;
     }
   };
 
@@ -143,16 +140,22 @@
     fMesh.transform(fTransformation);
     meshes.push(fMesh);
 
-    var cubeTransformation = Matrix4.translation(0,0,0);
-    const cubeMesh = new Mesh({
-      gl,
-      program,
-      coordinates: Cube,
-      texture: fTexture,
-      normals: CubeNormals
-    });
-    cubeMesh.transform(cubeTransformation);
-    meshes.push(cubeMesh);
+    // var cubeTransformation = Matrix4.translation(0,0,0);
+    // const cubeTexture = new Texture({
+    //   gl,
+    //   program,
+    //   coordinates: CubeTexture,
+    //   src: './static/f-texture.png'
+    // });
+    // const cubeMesh = new Mesh({
+    //   gl,
+    //   program,
+    //   coordinates: Cube,
+    //   texture: cubeTexture,
+    //   normals: CubeNormals
+    // });
+    // cubeMesh.transform(cubeTransformation);
+    // meshes.push(cubeMesh);
 
     const floorTexture = new Texture({
       gl,
@@ -178,7 +181,14 @@
         1000, 0, -1000,
         -1000, 0, -1000
       ]),
-      normals: FNormals,
+      normals: new Float32Array([
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0
+      ]),
       texture: floorTexture
     });
     meshes.push(floor);
@@ -199,11 +209,18 @@
       value: Matrix4.identity,
     });
 
-    const basicLighting = new DirectionalLight({
+    // TODO: Removing this light causes the program to not work
+    basicLighting = new DirectionalLight({
       direction: new Vector3([0, 0, 1]),
-      color: new Vector4([1, 1, 1, 1])
+      color: new Vector3([0,0,0])
     });
     lightManager.addDirectionalLight(basicLighting);
+
+    const pointLight = new PointLight({
+      position: new Vector3([0, 100, 400]),
+      color: new Vector3([1, 1, 1])
+    });
+    lightManager.addPointLight(pointLight);
 
     draw();
   });
@@ -246,16 +263,18 @@
 
     const center = new Vector3([0,0,0]);
 
-    const cameraPosition = new Vector3([cameraTranslationX, cameraTranslationY, cameraTranslationZ]);
-
     let worldMatrix = new Matrix4();
-    worldMatrix = worldMatrix
-      .rotateY(degreesToRadians(rotationY))
-      .rotateX(degreesToRadians(rotationX))
-      .rotateZ(degreesToRadians(rotationZ))
-      .translate(worldTranslationX, worldTranslationY, worldTranslationZ);
 
-    const cameraMatrix = Matrix4.lookAt(cameraPosition, center);
+    let cameraMatrix = new Matrix4([
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1,
+      0, ...cameraPosition.values, 1
+    ]);
+
+    if (stickToMesh) {
+      cameraMatrix = Matrix4.lookAt(cameraPosition, center);
+    };
 
     // Make a view matrix from the camera matrix.
     const viewMatrix = cameraMatrix.invert();
@@ -268,7 +287,6 @@
       viewProjectionMatrix,
     );
 
-    // Set the matrix.
     worldInverseTranspose.value = worldMatrix.values;
     worldViewUniform.value = worldViewProjectionMatrix.values;
 
@@ -289,15 +307,15 @@
       </span>
       <span class="field">
         <span class="label">x</span>
-        <input type="number" bind:value={worldTranslationX} />
+        <input type="number" bind:value={cameraPosition.values[0]} />
       </span>
       <span class="field">
         <span class="label">y</span>
-        <input type="number" bind:value={worldTranslationY} min={-1000} max={1000} />
+        <input type="number" bind:value={cameraPosition.values[1]} min={-1000} max={1000} />
       </span>
       <span class="field">
         <span class="label">z</span>
-        <input type="number" bind:value={worldTranslationZ} min={-1000} max={1000} />
+        <input type="number" bind:value={cameraPosition.values[2]} min={-1000} max={1000} />
       </span>
     </div>
     <div class="control">
@@ -308,7 +326,7 @@
         <span class="label">x</span>
         <input
           type="number"
-          bind:value={rotationX}
+          bind:value={cameraRotation.values[0]}
           step={15}
           min={-360}
           max={360}
@@ -318,7 +336,7 @@
         <span class="label">y</span>
         <input
           type="number"
-          bind:value={rotationY}
+          bind:value={cameraRotation.values[1]}
           step={15}
           min={-360}
           max={360}
@@ -328,11 +346,15 @@
         <span class="label">z</span>
         <input
           type="number"
-          bind:value={rotationZ}
+          bind:value={cameraRotation.values[2]}
           step={15}
           min={-360}
           max={360}
         />
+      </span>
+      <span class="field">
+        <span class="label">Focus F</span>
+        <input type="checkbox" bind:checked={stickToMesh}>
       </span>
     </div>
   </div>

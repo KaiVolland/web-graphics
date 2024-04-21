@@ -4,41 +4,41 @@ import type { Vector3, Vector3D, Vector4 } from "../math/Vector";
 
 const _ = 0;
 
-export type DirectionalLightParams = {
+export type PointLightParams = {
   color: Vector3;
-  direction: Vector3;
+  position: Vector3;
 };
 
-export class DirectionalLight {
+export class PointLight {
 
   private _color: Vector3;
 
-  private _direction: Vector3;
+  private _position: Vector3;
 
   private _index: number = -1;
 
   private _lightManager: LightManager | undefined;
 
-  constructor({ color, direction }: DirectionalLightParams) {
+  constructor({ color, position }: PointLightParams) {
     this._color = color;
-    this._direction = direction;
+    this._position = position;
   }
 
   get color() {
     return this._color;
   }
 
-  get direction() {
-    return this._direction;
+  get position() {
+    return this._position;
   }
 
-  set direction(direction: Vector3) {
-    this._direction = direction;
+  set position(position: Vector3) {
+    this._position = position;
     if (!this._lightManager) {
-      console.log("Can't set direction before adding it to LightManager");
+      console.log("Can't set position before adding it to LightManager");
       return;
     }
-    this._lightManager.setDirectionalLightDirection(this.index, direction);
+    this._lightManager.setPointLightPosition(this.index, position);
   }
 
   set color(color: Vector3) {
@@ -47,7 +47,7 @@ export class DirectionalLight {
       console.log("Can't set color before adding it to LightManager");
       return;
     }
-    this._lightManager.setDirectionalLightColor(this.index, color);
+    this._lightManager.setPointLightColor(this.index, color);
   }
 
   get index() {
