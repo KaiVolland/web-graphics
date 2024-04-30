@@ -7,11 +7,12 @@ in vec3 a_normal;
 in vec2 a_texcoord;
 
 uniform mat4 u_worldViewProjection;
-uniform mat4 u_worldInverseTranspose;
+uniform vec3 u_cameraPosition;
 
 out vec2 v_texcoord;
 out vec3 v_normal;
 out vec3 v_position;
+out vec3 v_surfaceToView;
 
 void main() {
   // Multiply the position by the matrix.
@@ -23,6 +24,8 @@ void main() {
   v_texcoord = a_texcoord;
 
   // Pass the normal to the fragment shader
-  v_normal = mat3(u_worldInverseTranspose) * a_normal;
+  v_normal = a_normal;
+
+  v_surfaceToView = u_cameraPosition - v_position;
 }
 `;

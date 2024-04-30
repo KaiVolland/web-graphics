@@ -17,17 +17,19 @@
   import { DirectionalLight } from '../engine/models/light/DirectionalLight';
   import { LightManager } from '../engine/LightManager';
   import { PointLight } from '../engine/models/light/PointLight';
+  import { SpotLight } from '../engine/models/light/SpotLight';
 
-  let stickToMesh = false;
+  let stickToMesh = true;
 
   let canvas: HTMLCanvasElement;
-  let cameraPosition: Vector3 = new Vector3([0, 100, 400]);
+  let cameraPosition: Vector3 = new Vector3([0, 100, -400]);
   let cameraRotation: Vector3 = new Vector3([0, 0, 0]);
   let gl: WebGL2RenderingContext;
   let meshes: Mesh[] = [];
 
   let worldInverseTranspose: Uniform;
   let worldViewUniform: Uniform;
+  let cameraPositionUniform: Uniform;
   let program: Program;
 
   let mouseRotateActive = false;
@@ -35,7 +37,7 @@
   let mouseAction = 'rotate';
   let mouseRotateStartRotate = [0, 0, 0];
   let mouseRotateStartTranslate = [0, 0, 0];
-  let basicLighting: DirectionalLight;
+  // let basicLighting: DirectionalLight;
 
   const onMouseDown = (event: MouseEvent | TouchEvent) => {
     const isTouch = event instanceof TouchEvent;
@@ -76,13 +78,17 @@
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'w') {
-      cameraPosition.values[2] -= 10;
-    } else if (event.key === 's') {
       cameraPosition.values[2] += 10;
+    } else if (event.key === 's') {
+      cameraPosition.values[2] -= 10;
     } else if (event.key === 'a') {
       cameraPosition.values[0] -= 10;
     } else if (event.key === 'd') {
       cameraPosition.values[0] += 10;
+    } else if (event.key === 'q') {
+      cameraPosition.values[1] -= 10;
+    } else if (event.key === 'e') {
+      cameraPosition.values[1] += 10;
     }
   };
 
@@ -140,22 +146,26 @@
     fMesh.transform(fTransformation);
     meshes.push(fMesh);
 
-    // var cubeTransformation = Matrix4.translation(0,0,0);
-    // const cubeTexture = new Texture({
-    //   gl,
-    //   program,
-    //   coordinates: CubeTexture,
-    //   src: './static/f-texture.png'
-    // });
-    // const cubeMesh = new Mesh({
-    //   gl,
-    //   program,
-    //   coordinates: Cube,
-    //   texture: cubeTexture,
-    //   normals: CubeNormals
-    // });
-    // cubeMesh.transform(cubeTransformation);
-    // meshes.push(cubeMesh);
+    // FIXME: the transformations seem to be applied in reverse order
+    var cubeTransformation = new Matrix4()
+      .scale(0.1, 0.1, 0.1)
+      .translate(0, 200, 200);
+
+    const cubeTexture = new Texture({
+      gl,
+      program,
+      coordinates: CubeTexture,
+      src: './static/f-texture.png'
+    });
+    const cubeMesh = new Mesh({
+      gl,
+      program,
+      coordinates: Cube,
+      texture: cubeTexture,
+      normals: CubeNormals
+    });
+    cubeMesh.transform(cubeTransformation);
+    meshes.push(cubeMesh);
 
     const floorTexture = new Texture({
       gl,
@@ -209,18 +219,44 @@
       value: Matrix4.identity,
     });
 
-    // TODO: Removing this light causes the program to not work
-    basicLighting = new DirectionalLight({
-      direction: new Vector3([0, 0, 1]),
-      color: new Vector3([0,0,0])
+    cameraPositionUniform = new Uniform({
+      gl,
+      type: '3fv',
+      name: 'u_cameraPosition',
+      program,
+      value: cameraPosition.values,
     });
-    lightManager.addDirectionalLight(basicLighting);
 
-    const pointLight = new PointLight({
-      position: new Vector3([0, 100, 400]),
-      color: new Vector3([1, 1, 1])
+    // TODO: move to PointLight class
+    new Uniform({
+      gl,
+      type: '1f',
+      name: 'u_shininess',
+      program,
+      value: 150,
     });
-    lightManager.addPointLight(pointLight);
+
+    // lightManager.addPointLight(
+    //   new PointLight({
+    //     position: new Vector3([0, 200, 200]),
+    //     color: new Vector3([1, 0, 0])
+    //   })
+    // );
+
+    // lightManager.addPointLight(
+    //   new PointLight({
+    //     position: new Vector3([0, 100, -200]),
+    //     color: new Vector3([1, 1, 1])
+    //   })
+    // );
+
+    const spotLight = new SpotLight({
+      position: new Vector3([0, 100, -400]),
+      direction: new Vector3([0, 0, -1]),
+      color: new Vector3([1, 1, 1]),
+      coneAngle: 30
+    });
+    lightManager.addSpotLight(spotLight);
 
     draw();
   });
@@ -261,7 +297,7 @@
       zFar,
     );
 
-    const center = new Vector3([0,0,0]);
+    const center = new Vector3([0, 0, 0]);
 
     let worldMatrix = new Matrix4();
 
@@ -289,6 +325,7 @@
 
     worldInverseTranspose.value = worldMatrix.values;
     worldViewUniform.value = worldViewProjectionMatrix.values;
+    cameraPositionUniform.value = cameraPosition.values;
 
     // Draw the meshes
     meshes.forEach(mesh => mesh.draw());

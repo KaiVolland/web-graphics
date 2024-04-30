@@ -1,4 +1,3 @@
-import type { isJSDocPrivateTag } from "typescript";
 import type { LightManager } from "../../LightManager";
 import type { Vector3, Vector3D, Vector4 } from "../math/Vector";
 
@@ -8,6 +7,10 @@ export type PointLightParams = {
 };
 
 export class PointLight {
+
+  static DATA_SIZE = 8;
+
+  static COLOR_OFFSET = 4;
 
   private _color: Vector3;
 

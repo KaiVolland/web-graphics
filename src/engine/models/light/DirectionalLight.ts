@@ -1,6 +1,5 @@
-import type { isJSDocPrivateTag } from "typescript";
 import type { LightManager } from "../../LightManager";
-import type { Vector3, Vector3D, Vector4 } from "../math/Vector";
+import type { Vector3 } from "../math/Vector";
 
 export type DirectionalLightParams = {
   color: Vector3;
