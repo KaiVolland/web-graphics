@@ -1,3 +1,4 @@
+import { ObjParser } from "../../parser/ObjParser";
 import type { Matrix4 } from "../math/Matrix";
 import { Vector4, type Vector4D } from "../math/Vector";
 import { Attribute } from "../webgl/Attribute";
@@ -13,6 +14,10 @@ export type MeshParams = {
 };
 
 export class Mesh {
+
+  static fromObjString(objString: string, mtlString?: string) {
+    return ObjParser.readObj(objString);
+  }
 
   private _gl: WebGL2RenderingContext;
 

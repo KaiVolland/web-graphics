@@ -18,10 +18,10 @@
   import { LightManager } from '../engine/LightManager';
   import { PointLight } from '../engine/models/light/PointLight';
 
-  let stickToMesh = false;
+  let stickToMesh = true;
 
   let canvas: HTMLCanvasElement;
-  let cameraPosition: Vector3 = new Vector3([0, 100, 400]);
+  let cameraPosition: Vector3 = new Vector3([50, 300, 400]);
   let cameraRotation: Vector3 = new Vector3([0, 0, 0]);
   let gl: WebGL2RenderingContext;
   let meshes: Mesh[] = [];
@@ -83,7 +83,23 @@
       cameraPosition.values[0] -= 10;
     } else if (event.key === 'd') {
       cameraPosition.values[0] += 10;
+    } else if (event.key === 'q') {
+      cameraPosition.values[1] -= 10;
+    } else if (event.key === 'e') {
+      cameraPosition.values[1] += 10;
     }
+  };
+
+  const loadModels = async () => {
+    const response = await fetch('/web-graphics/static/bentobox.obj');
+    const data = await response.text();
+    const bentobox = new Mesh({
+      gl,
+      program,
+      ...Mesh.fromObjString(data)
+    });
+    bentobox.transform(Matrix4.scaling(1000, 1000, 1000));
+    meshes.push(bentobox);
   };
 
   onMount(() => {
@@ -138,7 +154,7 @@
       texture: fTexture
     });
     fMesh.transform(fTransformation);
-    meshes.push(fMesh);
+    // meshes.push(fMesh);
 
     // var cubeTransformation = Matrix4.translation(0,0,0);
     // const cubeTexture = new Texture({
@@ -211,16 +227,18 @@
 
     // TODO: Removing this light causes the program to not work
     basicLighting = new DirectionalLight({
-      direction: new Vector3([0, 0, 1]),
-      color: new Vector3([0,0,0])
+      direction: new Vector3([1, 1, 1]),
+      color: new Vector3([1,1,1])
     });
     lightManager.addDirectionalLight(basicLighting);
 
-    const pointLight = new PointLight({
-      position: new Vector3([0, 100, 400]),
-      color: new Vector3([1, 1, 1])
-    });
-    lightManager.addPointLight(pointLight);
+    // const pointLight = new PointLight({
+    //   position: new Vector3([0, 100, 400]),
+    //   color: new Vector3([1, 1, 1])
+    // });
+    // lightManager.addPointLight(pointLight);
+
+    loadModels();
 
     draw();
   });
